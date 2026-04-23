@@ -1,0 +1,1385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ASPICE Capability Grader</title>
+<style>
+  :root {
+    --bg: #f7f9fc;
+    --panel: #ffffff;
+    --ink: #1b2330;
+    --muted: #667085;
+    --line: #e5e9f0;
+    --accent: #2563eb;
+    --accent-soft: #e0ecff;
+    --n: #ef4444;
+    --p: #f59e0b;
+    --l: #3b82f6;
+    --f: #16a34a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  header {
+    padding: 20px 28px; background: #ffffff; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  header h1 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+  header .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+  button {
+    font: inherit; padding: 7px 12px; border-radius: 8px;
+    border: 1px solid var(--line); background: #fff; color: var(--ink);
+    cursor: pointer; transition: background .15s, border-color .15s;
+  }
+  button:hover { background: #f1f5f9; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button.primary:hover { background: #1d4fd0; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  main { display: grid; grid-template-columns: 340px 1fr; gap: 20px; padding: 20px 28px; }
+  @media (max-width: 980px) { main { grid-template-columns: 1fr; } }
+  .panel {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px; box-shadow: 0 1px 2px rgba(16,24,40,.04);
+  }
+  .panel h2 { font-size: 13px; margin: 0 0 10px; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+  .group { margin-bottom: 14px; }
+  .group-title { font-size: 11px; color: var(--muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: .08em; margin: 8px 0 6px; }
+  .proc-list { display: flex; flex-direction: column; gap: 4px; }
+  .proc-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 10px; border-radius: 8px; cursor: pointer; border: 1px solid transparent;
+  }
+  .proc-item:hover { background: #f1f5f9; }
+  .proc-item.active { background: var(--accent-soft); border-color: #bcd5ff; }
+  .proc-item.empty { opacity: .55; }
+  .proc-item.empty .proc-code { color: #94a3b8; }
+  .proc-item.active.empty { opacity: 1; }
+  .proc-code { font-weight: 600; font-size: 13px; }
+  .proc-name { color: var(--muted); font-size: 12px; margin-left: 8px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .level-pill {
+    font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 999px;
+    background: #eef2f7; color: var(--muted); min-width: 28px; text-align: center;
+  }
+  .level-pill.cl0 { background: #fee2e2; color: #991b1b; }
+  .level-pill.cl1 { background: #fef3c7; color: #92400e; }
+  .level-pill.cl2 { background: #dbeafe; color: #1e40af; }
+  .level-pill.cl3 { background: #dcfce7; color: #166534; }
+  .level-pill.cl4 { background: #e9d5ff; color: #6b21a8; }
+  .level-pill.cl5 { background: #cffafe; color: #155e75; }
+
+  .detail h2 { font-size: 16px; font-weight: 600; text-transform: none;
+    letter-spacing: 0; color: var(--ink); margin: 0 0 4px; }
+  .detail .desc { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+  .pa-row {
+    border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+    margin-bottom: 10px; background: #fbfcfe;
+    transition: opacity .2s, filter .2s;
+  }
+  .pa-row.locked { background: #f8fafc; border-color: #eef2f7; }
+  .pa-row.dim-1 { opacity: .78; }
+  .pa-row.dim-2 { opacity: .60; filter: grayscale(.25); }
+  .pa-row.dim-3 { opacity: .46; filter: grayscale(.5); }
+  .pa-row.dim-4 { opacity: .34; filter: grayscale(.75); }
+  .pa-row .pa-title .lock-badge {
+    font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 4px;
+    background: #e2e8f0; color: #64748b; margin-left: 6px; vertical-align: middle;
+  }
+  .pa-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; }
+  .pa-title { font-weight: 600; }
+  .pa-title .cl { color: var(--muted); font-weight: 500; font-size: 12px; margin-left: 6px; }
+  .pa-desc { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .pa-right { display: flex; align-items: center; gap: 10px; }
+  .rating-pill {
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+    background: #eef2f7; color: var(--muted); min-width: 28px; text-align: center;
+  }
+  .rating-pill.N { background: var(--n); color: #fff; }
+  .rating-pill.P { background: var(--p); color: #fff; }
+  .rating-pill.L { background: var(--l); color: #fff; }
+  .rating-pill.F { background: var(--f); color: #fff; }
+  .chev { color: var(--muted); font-size: 12px; transition: transform .15s; }
+  .pa-row.open .chev { transform: rotate(90deg); }
+  .practices { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px; display: none; }
+  .pa-row.open .practices { display: block; }
+  .practice {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 7px 0; border-bottom: 1px solid #f1f5f9;
+  }
+  .practice:last-child { border-bottom: 0; }
+  .practice .pid { font-weight: 600; font-size: 12px; min-width: 70px; color: var(--ink); }
+  .practice .ptxt { flex: 1; font-size: 12.5px; color: var(--ink); }
+  .practice-wrap { border-bottom: 1px solid #f1f5f9; padding: 7px 0; }
+  .practice-wrap:last-child { border-bottom: 0; }
+  .practice-wrap .practice { border-bottom: 0; padding: 0; }
+  .note-btn {
+    font: inherit; padding: 3px 8px; border-radius: 6px;
+    border: 1px solid var(--line); background: #fff; color: var(--muted);
+    cursor: pointer; font-size: 11px; font-weight: 600;
+  }
+  .note-btn:hover { background: #f1f5f9; }
+  .note-btn.has-note { background: #fef9c3; border-color: #fde68a; color: #854d0e; }
+  .note-area {
+    display: none; margin: 8px 0 0 80px;
+  }
+  .note-wrap.open .note-area { display: block; }
+  .note-area textarea {
+    width: 100%; min-height: 60px; resize: vertical;
+    padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
+    font: inherit; font-size: 12.5px; background: #fffef5;
+    color: var(--ink); outline: none;
+  }
+  .note-area textarea:focus { border-color: var(--accent); background: #fff; }
+  .note-meta { display: flex; justify-content: space-between; margin-top: 4px;
+    font-size: 11px; color: var(--muted); }
+  .rating { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #fff; }
+  .rating button {
+    border: 0; border-right: 1px solid var(--line); border-radius: 0;
+    padding: 4px 9px; background: #fff; font-weight: 600; font-size: 11px;
+    color: var(--muted); min-width: 30px;
+  }
+  .rating button:last-child { border-right: 0; }
+  .rating button.active[data-v="N"] { background: var(--n); color: #fff; }
+  .rating button.active[data-v="P"] { background: var(--p); color: #fff; }
+  .rating button.active[data-v="L"] { background: var(--l); color: #fff; }
+  .rating button.active[data-v="F"] { background: var(--f); color: #fff; }
+  .rating button.capped {
+    background: #f8fafc;
+    color: #cbd5e1; cursor: not-allowed; opacity: .6;
+  }
+  .rating button:disabled { cursor: not-allowed; }
+  .practice-wrap.prereq-missing { opacity: .72; }
+  .practice-wrap.prereq-missing .pid,
+  .practice-wrap.prereq-missing .ptxt { color: #94a3b8; }
+  .dep-hint {
+    margin: 4px 0 0 80px; font-size: 11px; color: var(--muted);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  }
+  .dep-hint.warn { color: #b45309; }
+  .dep-hint code {
+    background: #f1f5f9; padding: 1px 5px; border-radius: 4px;
+    font-size: 10.5px; font-weight: 600; color: var(--ink);
+    cursor: default;
+  }
+  .dep-hint code.cross {
+    background: #ede9fe; color: #5b21b6; cursor: pointer;
+  }
+  .dep-hint code.cross:hover { background: #ddd6fe; }
+  .upstream-bar {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    padding: 8px 12px; border: 1px solid #e9d5ff; background: #faf5ff;
+    border-radius: 8px; margin-bottom: 14px; font-size: 12px;
+  }
+  .upstream-bar .label {
+    font-weight: 600; color: #6b21a8; text-transform: uppercase; letter-spacing: .05em; font-size: 10.5px;
+  }
+  .upstream-chip {
+    padding: 3px 8px; border-radius: 999px; background: #fff; border: 1px solid #e9d5ff;
+    color: #5b21b6; font-weight: 600; cursor: pointer; font-size: 11px;
+  }
+  .upstream-chip:hover { background: #f3e8ff; }
+  .upstream-chip .r {
+    margin-left: 5px; padding: 1px 5px; border-radius: 4px; font-size: 10px; background: #eef2f7; color: var(--muted);
+  }
+  .upstream-chip .r.N { background: var(--n); color: #fff; }
+  .upstream-chip .r.P { background: var(--p); color: #fff; }
+  .upstream-chip .r.L { background: var(--l); color: #fff; }
+  .upstream-chip .r.F { background: var(--f); color: #fff; }
+  .locked-msg { color: var(--muted); font-size: 12px; font-style: italic; margin-top: 6px; }
+  .result-banner {
+    display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+    border: 1px solid var(--line); border-radius: 10px; background: #fff;
+    margin-bottom: 16px;
+  }
+  .result-banner .big { font-size: 28px; font-weight: 700; letter-spacing: -.02em; }
+  .result-banner .label { color: var(--muted); font-size: 12px;
+    text-transform: uppercase; letter-spacing: .08em; }
+  .chain { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .chain .step {
+    font-size: 11px; padding: 3px 8px; border-radius: 999px;
+    background: #eef2f7; color: var(--muted);
+  }
+  .chain .step.ok { background: #dcfce7; color: #166534; }
+  .chain .step.fail { background: #fee2e2; color: #991b1b; }
+  .summary-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px; margin-top: 8px;
+  }
+  .sum-card {
+    border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
+    background: #fff; display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer;
+  }
+  .sum-card:hover { background: #f8fafc; }
+  .sum-card .code { font-weight: 600; font-size: 12px; }
+  .legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;
+    color: var(--muted); font-size: 11px; }
+  .legend span b { display: inline-block; width: 10px; height: 10px;
+    border-radius: 3px; vertical-align: middle; margin-right: 4px; }
+  .progress { height: 4px; border-radius: 2px; background: #eef2f7; overflow: hidden; width: 80px; }
+  .progress > span { display: block; height: 100%; background: var(--accent); }
+  footer { text-align: center; color: var(--muted); font-size: 11px; padding: 16px; }
+  input[type=file] { display: none; }
+  .db-status {
+    font-size: 11px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px; background: #f1f5f9;
+  }
+  .db-status .dot { width: 7px; height: 7px; border-radius: 50%; background: #cbd5e1; }
+  .db-status.ok .dot { background: var(--f); }
+  .db-status.saving .dot { background: var(--p); }
+  .db-status.error .dot { background: var(--n); }
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(15,23,42,.35); z-index: 100;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal {
+    background: #fff; border-radius: 12px; max-width: 680px; width: 100%;
+    max-height: 80vh; display: flex; flex-direction: column;
+    box-shadow: 0 10px 30px rgba(15,23,42,.2);
+  }
+  .modal header { position: static; padding: 14px 18px; }
+  .modal .body { padding: 0 18px 18px; overflow: auto; }
+  .snap-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px;
+    margin-bottom: 6px; background: #fbfcfe;
+  }
+  .snap-row .meta { font-size: 12px; color: var(--muted); }
+  .snap-row .actions { display: flex; gap: 6px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>ASPICE Capability Grader</h1>
+    <div class="sub">Automotive SPICE 3.1 — grade each discipline against its Base Practices &amp; Generic Practices.</div>
+  </div>
+  <div class="toolbar">
+    <span id="dbStatus" class="db-status"><span class="dot"></span><span id="dbStatusText">starting…</span></span>
+    <button id="btnHistory">History</button>
+    <button id="btnReset">Reset</button>
+    <button id="btnExport">Export JSON</button>
+    <button id="btnImport">Import</button>
+    <input type="file" id="fileImport" accept="application/json" />
+    <button id="btnSummary" class="primary">Overall Summary</button>
+  </div>
+</header>
+<main>
+  <aside class="panel">
+    <h2>Processes</h2>
+    <div id="procList"></div>
+  </aside>
+  <section id="detail" class="panel detail"></section>
+</main>
+<footer>
+  Practice ratings: N ≤15% · P &gt;15–50% · L &gt;50–85% · F &gt;85%.
+  PA rating is the aggregate of its practices. Level N needs all lower PAs = F and level-N PAs ≥ L.
+</footer>
+
+<script>
+// ============================================================================
+// ASPICE 3.1 — Processes, Base Practices (BP) and Generic Practices (GP)
+// ============================================================================
+
+const PROCESSES = [
+  { group: "Acquisition (ACQ)", items: [
+    ["ACQ.4", "Supplier Monitoring"],
+  ]},
+  { group: "Supply (SPL)", items: [
+    ["SPL.2", "Product Release"],
+  ]},
+  { group: "System Engineering (SYS)", items: [
+    ["SYS.1", "Requirements Elicitation"],
+    ["SYS.2", "System Requirements Analysis"],
+    ["SYS.3", "System Architectural Design"],
+    ["SYS.4", "System Integration and Integration Test"],
+    ["SYS.5", "System Qualification Test"],
+  ]},
+  { group: "Software Engineering (SWE)", items: [
+    ["SWE.1", "Software Requirements Analysis"],
+    ["SWE.2", "Software Architectural Design"],
+    ["SWE.3", "Software Detailed Design and Unit Construction"],
+    ["SWE.4", "Software Unit Verification"],
+    ["SWE.5", "Software Integration and Integration Test"],
+    ["SWE.6", "Software Qualification Test"],
+  ]},
+  { group: "Supporting (SUP)", items: [
+    ["SUP.1",  "Quality Assurance"],
+    ["SUP.8",  "Configuration Management"],
+    ["SUP.9",  "Problem Resolution Management"],
+    ["SUP.10", "Change Request Management"],
+  ]},
+  { group: "Management (MAN)", items: [
+    ["MAN.3", "Project Management"],
+    ["MAN.5", "Risk Management"],
+    ["MAN.6", "Measurement"],
+  ]},
+  { group: "Reuse (REU)", items: [
+    ["REU.2", "Reuse Program Management"],
+  ]},
+];
+
+// Process-specific BASE PRACTICES (PA1.1)
+const BPS = {
+  "ACQ.4": [
+    "Agree on and maintain joint processes, joint interfaces and information to be exchanged.",
+    "Exchange all agreed information between customer and supplier.",
+    "Review technical development with the supplier.",
+    "Review progress of the supplier.",
+    "Act to correct deviations.",
+  ],
+  "SPL.2": [
+    "Define the functional content of releases.",
+    "Define release products.",
+    "Establish product release classification and numbering scheme.",
+    "Define the build activities and build environment.",
+    "Build the release from configured items.",
+    "Determine the product release readiness.",
+    "Provide product release approval and release notice.",
+    "Ensure consistency of all release elements.",
+    "Deliver the release to the intended customer.",
+  ],
+  "SYS.1": [
+    "Obtain stakeholder requirements and requests.",
+    "Understand stakeholder expectations.",
+    "Agree on requirements.",
+    "Establish stakeholder requirements baseline.",
+    "Manage stakeholder requirements changes.",
+    "Establish customer-supplier joint activities.",
+    "Communicate the agreed stakeholder requirements.",
+  ],
+  "SYS.2": [
+    "Specify system requirements.",
+    "Structure system requirements.",
+    "Analyze system requirements.",
+    "Analyze the impact on the operating environment.",
+    "Develop verification criteria for each system requirement.",
+    "Establish bidirectional traceability.",
+    "Ensure consistency between stakeholder and system requirements.",
+    "Communicate agreed system requirements.",
+  ],
+  "SYS.3": [
+    "Develop system architectural design.",
+    "Allocate system requirements to elements of the system architecture.",
+    "Define interfaces of system elements.",
+    "Describe dynamic behavior.",
+    "Evaluate alternative system architectures.",
+    "Establish bidirectional traceability.",
+    "Ensure consistency between system requirements and architecture.",
+    "Communicate agreed system architectural design.",
+  ],
+  "SYS.4": [
+    "Develop system integration strategy consistent with the project plan.",
+    "Develop system integration test strategy including regression test strategy.",
+    "Develop specification for system integration test.",
+    "Integrate system items.",
+    "Select test cases from the specification.",
+    "Perform system integration test using selected test cases.",
+    "Establish bidirectional traceability.",
+    "Ensure consistency between test specifications and integrated items.",
+    "Summarize and communicate results.",
+  ],
+  "SYS.5": [
+    "Develop system qualification test strategy including regression test strategy.",
+    "Develop specification for system qualification test.",
+    "Select test cases with sufficient coverage.",
+    "Test integrated system.",
+    "Establish bidirectional traceability.",
+    "Ensure consistency between system requirements and qualification test.",
+    "Summarize and communicate results.",
+  ],
+  "SWE.1": [
+    "Specify software requirements.",
+    "Structure software requirements.",
+    "Analyze software requirements.",
+    "Analyze the impact on the operating environment.",
+    "Develop verification criteria for each software requirement.",
+    "Establish bidirectional traceability.",
+    "Ensure consistency between system and software requirements.",
+    "Communicate agreed software requirements.",
+  ],
+  "SWE.2": [
+    "Develop software architectural design.",
+    "Allocate software requirements to elements of the software architecture.",
+    "Define interfaces of software components.",
+    "Describe dynamic behavior.",
+    "Evaluate alternative software architectures.",
+    "Establish bidirectional traceability.",
+    "Ensure consistency between software requirements and architecture.",
+    "Communicate agreed software architectural design.",
+  ],
+  "SWE.3": [
+    "Develop software detailed design.",
+    "Define interfaces of software units.",
+    "Describe dynamic behavior.",
+    "Evaluate software detailed design.",
+    "Establish bidirectional traceability.",
+    "Ensure consistency between architecture, detailed design and units.",
+    "Communicate agreed software detailed design.",
+    "Develop software units per detailed design.",
+  ],
+  "SWE.4": [
+    "Develop software unit verification strategy including regression strategy.",
+    "Develop criteria for unit verification.",
+    "Perform static verification of software units.",
+    "Test software units.",
+    "Establish bidirectional traceability.",
+    "Ensure consistency between unit verification and detailed design.",
+    "Summarize and communicate results.",
+  ],
+  "SWE.5": [
+    "Develop software integration strategy.",
+    "Develop software integration test strategy including regression test strategy.",
+    "Develop specification for software integration test.",
+    "Integrate software units and software components.",
+    "Select test cases from the specification.",
+    "Perform software integration test.",
+    "Establish bidirectional traceability.",
+    "Ensure consistency between test specifications and integrated items.",
+    "Summarize and communicate results.",
+  ],
+  "SWE.6": [
+    "Develop software qualification test strategy including regression test strategy.",
+    "Develop specification for software qualification test.",
+    "Select test cases with sufficient coverage.",
+    "Test integrated software.",
+    "Establish bidirectional traceability.",
+    "Ensure consistency between software requirements and qualification test.",
+    "Summarize and communicate results.",
+  ],
+  "SUP.1": [
+    "Develop a project quality assurance strategy.",
+    "Assure quality of work products.",
+    "Assure quality of process activities.",
+    "Summarize and communicate quality assurance activities and results.",
+    "Ensure resolution of non-conformances.",
+    "Implement an escalation mechanism.",
+  ],
+  "SUP.8": [
+    "Develop a configuration management strategy.",
+    "Identify configuration items.",
+    "Establish a configuration management system.",
+    "Establish branch management for concurrent development.",
+    "Control modifications and releases.",
+    "Establish baselines for internal and external purposes.",
+    "Report configuration status.",
+    "Verify the information about configured items.",
+    "Manage the storage of configuration items and baselines.",
+  ],
+  "SUP.9": [
+    "Develop a problem resolution management strategy.",
+    "Identify and record the problem.",
+    "Record the status of problems.",
+    "Diagnose the cause and determine the impact of the problem.",
+    "Authorize urgent resolution action when needed.",
+    "Raise alert notifications where relevant.",
+    "Initiate problem resolution.",
+    "Track problems to closure.",
+    "Analyze problem trends.",
+  ],
+  "SUP.10": [
+    "Develop a change request management strategy.",
+    "Identify and record change requests.",
+    "Record status of change requests.",
+    "Assess all change requests (impact, effort, risk).",
+    "Approve change requests before implementation.",
+    "Review the implementation of change requests.",
+    "Track change requests to closure.",
+    "Establish bidirectional traceability between CRs and affected items.",
+  ],
+  "MAN.3": [
+    "Define the scope of work.",
+    "Define project life cycle.",
+    "Evaluate feasibility of the project.",
+    "Define, monitor and adjust project activities.",
+    "Define, monitor and adjust project estimates and resources.",
+    "Ensure required skills, knowledge, and experience.",
+    "Identify, monitor and adjust project interfaces and agreed commitments.",
+    "Define, monitor and adjust project schedule.",
+    "Ensure consistency between plans and performed work.",
+    "Review and report progress of the project.",
+  ],
+  "MAN.5": [
+    "Establish risk management scope.",
+    "Define risk management strategies.",
+    "Identify risks.",
+    "Analyze risks.",
+    "Define risk treatment actions.",
+    "Monitor risks.",
+    "Take corrective action when risks develop adversely.",
+  ],
+  "MAN.6": [
+    "Identify information needs.",
+    "Specify measures aligned with information needs.",
+    "Obtain measurement data.",
+    "Analyze measurement data.",
+    "Use the information for decision-making.",
+    "Communicate measurement results.",
+  ],
+  "REU.2": [
+    "Define the organizational reuse strategy.",
+    "Identify domains for potential reuse.",
+    "Assess reuse proposals against strategy.",
+    "Perform reuse in projects.",
+    "Review reuse program implementation.",
+    "Monitor reuse program performance.",
+  ],
+};
+
+// GENERIC PRACTICES (apply to every process at CL ≥ 2)
+const GPS = {
+  "PA2.1": [
+    "Identify the objectives for the performance of the process.",
+    "Plan and monitor the performance of the process to fulfill the identified objectives.",
+    "Adjust the performance of the process.",
+    "Define responsibilities and authorities for performing the process.",
+    "Identify, prepare, and make available resources to perform the process according to plan.",
+    "Manage the interfaces between involved parties.",
+  ],
+  "PA2.2": [
+    "Define the requirements for the work products.",
+    "Define the requirements for documentation and control of the work products.",
+    "Identify, document and control the work products.",
+    "Review and adjust work products to meet the defined requirements.",
+  ],
+  "PA3.1": [
+    "Define a standard process that supports deployment of the defined process.",
+    "Determine the sequence and interaction between processes.",
+    "Identify the roles and competencies required by the standard process.",
+    "Identify infrastructure and work environment required by the standard process.",
+    "Determine methods to monitor the effectiveness and suitability of the standard process.",
+  ],
+  "PA3.2": [
+    "Deploy a defined process satisfying context-specific requirements of the standard process.",
+    "Assign and communicate roles, responsibilities and authorities for the defined process.",
+    "Ensure necessary competencies for performing the defined process.",
+    "Provide resources and information to support the defined process.",
+    "Provide adequate process infrastructure.",
+    "Collect and analyze data about performance of the process.",
+  ],
+  "PA4.1": [
+    "Identify process information needs in relation to business goals.",
+    "Derive process measurement objectives from information needs.",
+    "Establish quantitative objectives for the performance of the defined process.",
+    "Identify product and process measures supporting the quantitative objectives.",
+    "Collect product and process measurement results through performing the defined process.",
+  ],
+  "PA4.2": [
+    "Determine analysis and control techniques to control process performance.",
+    "Define parameters suitable to control process performance.",
+    "Analyze measurement results to identify variations in performance.",
+    "Identify and implement corrective actions to address assignable causes.",
+    "Re-establish control limits following corrective action.",
+  ],
+  "PA5.1": [
+    "Define process innovation objectives supporting relevant business goals.",
+    "Analyze measurement data of the process to identify variations.",
+    "Identify improvement opportunities of the process.",
+    "Derive proposed changes from innovations and improvement opportunities.",
+    "Define an implementation strategy based on long-term improvement vision.",
+  ],
+  "PA5.2": [
+    "Assess the impact of each proposed change against process objectives.",
+    "Manage the implementation of agreed changes.",
+    "Evaluate the effectiveness of process change based on actual performance.",
+  ],
+};
+
+const PAS = [
+  { cl: 1, id: "PA1.1", name: "Process Performance",
+    desc: "The process achieves its defined outcomes." },
+  { cl: 2, id: "PA2.1", name: "Performance Management",
+    desc: "The performance of the process is managed." },
+  { cl: 2, id: "PA2.2", name: "Work Product Management",
+    desc: "Work products are appropriately defined, controlled and maintained." },
+  { cl: 3, id: "PA3.1", name: "Process Definition",
+    desc: "A standard process is maintained to support deployment of the defined process." },
+  { cl: 3, id: "PA3.2", name: "Process Deployment",
+    desc: "The standard process is effectively deployed as a defined process." },
+  { cl: 4, id: "PA4.1", name: "Process Measurement",
+    desc: "Measurement results ensure performance supports business goals." },
+  { cl: 4, id: "PA4.2", name: "Process Control",
+    desc: "The process is quantitatively managed — stable, capable, predictable." },
+  { cl: 5, id: "PA5.1", name: "Process Innovation",
+    desc: "Changes to the process are identified from analysis and innovation." },
+  { cl: 5, id: "PA5.2", name: "Process Optimization",
+    desc: "Changes result in effective improvement of the process." },
+];
+
+const RATINGS = ["N", "P", "L", "F"];
+const R_VAL = { N: 7.5, P: 32.5, L: 67.5, F: 92.5 };
+const R_ORDER = { N: 0, P: 1, L: 2, F: 3 };
+
+// Intra-PA dependencies between Generic Practices.
+// Key: PA id, Value: { dependentIdx: [prerequisiteIdx, ...] }  (0-based).
+// A dependent practice cannot be rated higher than the LOWEST of its prerequisites.
+const GP_DEPS = {
+  "PA2.1": { 1: [0], 2: [1], 4: [1] },
+  "PA2.2": { 2: [1], 3: [0] },
+  "PA3.1": { 1: [0], 2: [0], 3: [0], 4: [0] },
+  "PA3.2": { 1: [0], 2: [1], 3: [0], 4: [0], 5: [0] },
+  "PA4.1": { 1: [0], 2: [1], 3: [2], 4: [3] },
+  "PA4.2": { 1: [0], 2: [1], 3: [2], 4: [3] },
+  "PA5.1": { 2: [1], 3: [2], 4: [3] },
+  "PA5.2": { 1: [0], 2: [1] },
+};
+
+// Cross-process (inter-discipline) dependencies. A downstream process's PA1.1
+// is bounded by the LOWEST PA1.1 among its upstream processes.
+const PROC_DEPS = {
+  "SYS.2": ["SYS.1"],
+  "SYS.3": ["SYS.2"],
+  "SYS.4": ["SYS.3"],
+  "SYS.5": ["SYS.2", "SYS.4"],
+  "SWE.1": ["SYS.2", "SYS.3"],
+  "SWE.2": ["SWE.1"],
+  "SWE.3": ["SWE.2"],
+  "SWE.4": ["SWE.3"],
+  "SWE.5": ["SWE.3"],
+  "SWE.6": ["SWE.1", "SWE.5"],
+  "SPL.2": ["SYS.5", "SUP.8"],
+  "SUP.1":  ["MAN.3"],
+  "SUP.10": ["SUP.8"],
+  "MAN.5":  ["MAN.3"],
+  "MAN.6":  ["MAN.3"],
+};
+
+// Derive intra-process BP dependencies from text patterns.
+// Rules (ASPICE-common):
+//   - If BP1 text matches strategy/scope  -> prerequisite of every later BP.
+//   - "bidirectional traceability"        -> depends on all earlier BPs.
+//   - "Ensure consistency"                -> depends on all earlier BPs.
+//   - "Communicate"/"Summarize and comm." -> depends on all earlier BPs.
+const _bpDepCache = {};
+function bpDepsFor(proc) {
+  if (_bpDepCache[proc]) return _bpDepCache[proc];
+  const bps = BPS[proc] || [];
+  const deps = {};
+  const strategyIdx = (bps[0] && /strategy|^Establish.*scope/i.test(bps[0])) ? 0 : -1;
+  bps.forEach((text, i) => {
+    const prereqs = new Set();
+    if (strategyIdx >= 0 && i !== strategyIdx) prereqs.add(strategyIdx);
+    const isLate = /bidirectional traceability|^Ensure consistency|^Communicate|^Summarize and communicate|^Provide.*release approval|^Deliver the release|^Determine the product release readiness/i.test(text);
+    if (isLate) {
+      for (let j = 0; j < i; j++) prereqs.add(j);
+    }
+    prereqs.delete(i);
+    if (prereqs.size) deps[i] = [...prereqs].sort((a,b)=>a-b);
+  });
+  _bpDepCache[proc] = deps;
+  return deps;
+}
+
+function practiceIdLabel(paId, idx) {
+  return paId === "PA1.1" ? `BP${idx+1}` : `GP${paId.slice(2)}.${idx+1}`;
+}
+
+function ratingCap(proc, paId, idx) {
+  let cap = "F";
+  const bounded = [];
+  const apply = (entry) => {
+    bounded.push(entry);
+    if (entry.rating && R_ORDER[entry.rating] < R_ORDER[cap]) cap = entry.rating;
+  };
+  // 1. Intra-PA GP dependencies
+  const gpDeps = GP_DEPS[paId]?.[idx];
+  if (gpDeps) {
+    for (const d of gpDeps) {
+      apply({ scope: "intra", label: practiceIdLabel(paId, d), rating: getPractice(proc, paId, d) });
+    }
+  }
+  // 2. Intra-process BP dependencies (PA1.1 only)
+  if (paId === "PA1.1") {
+    const bpDeps = bpDepsFor(proc)[idx];
+    if (bpDeps) {
+      for (const d of bpDeps) {
+        apply({ scope: "intra", label: `BP${d+1}`, rating: getPractice(proc, paId, d) });
+      }
+    }
+    // 3. Cross-process (inter-discipline) bound at PA1.1
+    const ups = PROC_DEPS[proc] || [];
+    for (const up of ups) {
+      apply({ scope: "cross", label: `${up}·PA1.1`, rating: paRating(up, PAS[0]), proc: up });
+    }
+  }
+  return { cap, bounded };
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+// ---- Persistence: IndexedDB primary, localStorage mirror ------------------
+// Two-layer durability — the current state lives in both IDB ("current") and
+// localStorage ("aspice-grader-v2"), plus a rolling history of IDB snapshots.
+const LS_KEY = "aspice-grader-v2";
+const DB_NAME = "aspice-grader";
+const DB_VERSION = 1;
+const STORE_STATE = "state";
+const STORE_SNAPS = "snapshots";
+const MAX_SNAPSHOTS = 50;
+
+let idb = null;
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE_STATE)) db.createObjectStore(STORE_STATE);
+      if (!db.objectStoreNames.contains(STORE_SNAPS))
+        db.createObjectStore(STORE_SNAPS, { keyPath: "ts" });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+function idbGet(store, key) {
+  return new Promise((resolve, reject) => {
+    const tx = idb.transaction(store, "readonly");
+    const req = tx.objectStore(store).get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+function idbPut(store, val, key) {
+  return new Promise((resolve, reject) => {
+    const tx = idb.transaction(store, "readwrite");
+    const s = tx.objectStore(store);
+    const req = key === undefined ? s.put(val) : s.put(val, key);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+function idbDelete(store, key) {
+  return new Promise((resolve, reject) => {
+    const tx = idb.transaction(store, "readwrite");
+    const req = tx.objectStore(store).delete(key);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+function idbAll(store) {
+  return new Promise((resolve, reject) => {
+    const tx = idb.transaction(store, "readonly");
+    const req = tx.objectStore(store).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function setStatus(kind, text) {
+  const el = document.getElementById("dbStatus");
+  el.className = "db-status " + kind;
+  document.getElementById("dbStatusText").textContent = text;
+}
+
+// ---- State -----------------------------------------------------------------
+let state = { practices: {}, notes: {}, active: "SYS.2" };
+let activeProc = "SYS.2";
+let openPAs = new Set(["PA1.1"]);
+let showingSummary = false;
+
+async function bootState() {
+  // Try IndexedDB first.
+  try {
+    idb = await openDB();
+    const idbState = await idbGet(STORE_STATE, "current");
+    if (idbState && typeof idbState === "object") {
+      state = idbState;
+    } else {
+      // Migrate from localStorage if present.
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        try { state = JSON.parse(raw); } catch (_) {}
+      }
+      await idbPut(STORE_STATE, state, "current");
+    }
+    setStatus("ok", "DB ready");
+  } catch (err) {
+    // IDB unavailable — fall back to localStorage only.
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) state = JSON.parse(raw);
+    } catch (_) {}
+    setStatus("error", "DB unavailable — using local only");
+  }
+  activeProc = state.active || "SYS.2";
+}
+
+let snapshotTimer = null;
+let saveTimer = null;
+async function saveState() {
+  state.active = activeProc;
+  // Immediate mirror to localStorage (sync, survives IDB wipe).
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (_) {}
+  // Debounced write to IDB + snapshot (avoid spamming on every click).
+  if (!idb) return;
+  setStatus("saving", "saving…");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try {
+      await idbPut(STORE_STATE, state, "current");
+      scheduleSnapshot();
+      setStatus("ok", "saved");
+    } catch (err) {
+      setStatus("error", "save failed");
+    }
+  }, 150);
+}
+
+function scheduleSnapshot() {
+  clearTimeout(snapshotTimer);
+  snapshotTimer = setTimeout(async () => {
+    try {
+      const ts = new Date().toISOString();
+      await idbPut(STORE_SNAPS, { ts, state: JSON.parse(JSON.stringify(state)) });
+      const snaps = await idbAll(STORE_SNAPS);
+      snaps.sort((a, b) => a.ts.localeCompare(b.ts));
+      while (snaps.length > MAX_SNAPSHOTS) {
+        const oldest = snaps.shift();
+        await idbDelete(STORE_SNAPS, oldest.ts);
+      }
+    } catch (_) {}
+  }, 2000); // coalesce rapid edits into one snapshot
+}
+function practiceKey(proc, paId, idx) { return `${proc}::${paId}::${idx}`; }
+function getPractice(proc, paId, idx) { return state.practices[practiceKey(proc, paId, idx)] || null; }
+function setPractice(proc, paId, idx, val) {
+  const k = practiceKey(proc, paId, idx);
+  if (state.practices[k] === val) delete state.practices[k];
+  else state.practices[k] = val;
+  cascadeAll(proc);
+  saveState();
+}
+
+// Recompute caps for a single (proc, paId) — for GPs or PA1.1 BPs.
+function cascadePA(proc, paId) {
+  let changed = false;
+  const practices = paId === "PA1.1"
+    ? (BPS[proc] || []).map((_, i) => i)
+    : Object.keys(GP_DEPS[paId] || {}).map(Number);
+  let keepGoing = true;
+  while (keepGoing) {
+    keepGoing = false;
+    for (const depIdx of practices) {
+      const k = practiceKey(proc, paId, depIdx);
+      const cur = state.practices[k];
+      if (!cur) continue;
+      const { cap } = ratingCap(proc, paId, depIdx);
+      if (R_ORDER[cur] > R_ORDER[cap]) {
+        if (cap === "N") delete state.practices[k];
+        else state.practices[k] = cap;
+        keepGoing = true;
+        changed = true;
+      }
+    }
+  }
+  return changed;
+}
+
+// Cross-process cascade: a change at `sourceProc` may drop caps on downstream
+// processes' PA1.1, which may change their PA1.1 rating, cascading further.
+function cascadeAll(sourceProc) {
+  const queue = [sourceProc];
+  const visited = new Set();
+  while (queue.length) {
+    const p = queue.shift();
+    if (visited.has(p)) continue;
+    visited.add(p);
+    const before = paRating(p, PAS[0]);
+    // Cascade every PA within this process.
+    for (const pa of PAS) cascadePA(p, pa.id);
+    const after = paRating(p, PAS[0]);
+    if (after !== before) {
+      for (const [downProc, ups] of Object.entries(PROC_DEPS)) {
+        if (ups.includes(p) && !visited.has(downProc)) queue.push(downProc);
+      }
+    }
+  }
+}
+function getNote(proc, paId, idx) {
+  if (!state.notes) state.notes = {};
+  return state.notes[practiceKey(proc, paId, idx)] || "";
+}
+function setNote(proc, paId, idx, text) {
+  if (!state.notes) state.notes = {};
+  const k = practiceKey(proc, paId, idx);
+  const trimmed = (text || "").trim();
+  if (!trimmed) delete state.notes[k];
+  else state.notes[k] = text;
+  saveState();
+}
+
+// ---- Practices for a PA on a process --------------------------------------
+function practicesFor(proc, pa) {
+  if (pa.id === "PA1.1") {
+    return (BPS[proc] || []).map((t, i) => ({ id: `BP${i+1}`, text: t, idx: i }));
+  }
+  return (GPS[pa.id] || []).map((t, i) => ({ id: `GP${pa.id.slice(2)}.${i+1}`, text: t, idx: i }));
+}
+
+// ---- Roll-up: practices -> PA rating --------------------------------------
+function paRating(proc, pa) {
+  const ps = practicesFor(proc, pa);
+  if (ps.length === 0) return null;
+  const vals = ps.map(p => getPractice(proc, pa.id, p.idx)).filter(v => v);
+  if (vals.length === 0) return null;
+  // average of achieved mid-values; unrated practices contribute 0 (N)
+  const sum = ps.reduce((acc, p) => {
+    const v = getPractice(proc, pa.id, p.idx);
+    return acc + (v ? R_VAL[v] : 0);
+  }, 0);
+  const avg = sum / ps.length;
+  if (avg <= 15) return "N";
+  if (avg <= 50) return "P";
+  if (avg <= 85) return "L";
+  return "F";
+}
+
+function paProgress(proc, pa) {
+  const ps = practicesFor(proc, pa);
+  if (!ps.length) return 0;
+  const rated = ps.filter(p => getPractice(proc, pa.id, p.idx)).length;
+  return Math.round((rated / ps.length) * 100);
+}
+
+// ---- Capability level computation ------------------------------------------
+// CL(N) achieved when all PAs at levels 1..N-1 are F and PAs at level N are L or F.
+function capabilityLevel(proc) {
+  const pasByLevel = {};
+  for (const pa of PAS) (pasByLevel[pa.cl] ??= []).push(pa);
+  let achieved = 0;
+  const trace = [];
+  for (let cl = 1; cl <= 5; cl++) {
+    const currPAs = pasByLevel[cl] || [];
+    const currOk = currPAs.every(p => {
+      const r = paRating(proc, p);
+      return r === "L" || r === "F";
+    });
+    let lowerOk = true;
+    for (let k = 1; k < cl; k++) {
+      for (const p of (pasByLevel[k] || [])) {
+        if (paRating(proc, p) !== "F") { lowerOk = false; break; }
+      }
+      if (!lowerOk) break;
+    }
+    trace.push({ cl, currOk, lowerOk });
+    if (currOk && lowerOk) achieved = cl;
+    else break;
+  }
+  return { achieved, trace };
+}
+
+function isPALocked(proc, pa) {
+  if (pa.cl === 1) return false;
+  for (const p of PAS) {
+    if (p.cl >= pa.cl) continue;
+    if (paRating(proc, p) !== "F") return true;
+  }
+  return false;
+}
+
+// ---- Rendering -------------------------------------------------------------
+function renderProcList() {
+  const host = document.getElementById("procList");
+  host.innerHTML = "";
+  for (const grp of PROCESSES) {
+    const g = document.createElement("div");
+    g.className = "group";
+    g.innerHTML = `<div class="group-title">${grp.group}</div>`;
+    const list = document.createElement("div");
+    list.className = "proc-list";
+    for (const [code, name] of grp.items) {
+      const { achieved } = capabilityLevel(code);
+      const hasAny = Object.keys(state.practices || {}).some(k => k.startsWith(code + "::"));
+      const empty = !hasAny;
+      const item = document.createElement("div");
+      item.className = "proc-item"
+        + (code === activeProc && !showingSummary ? " active" : "")
+        + (empty ? " empty" : "");
+      item.innerHTML = `
+        <div style="min-width:0; display:flex; align-items:center; overflow:hidden;">
+          <span class="proc-code">${code}</span>
+          <span class="proc-name">${name}</span>
+        </div>
+        <span class="level-pill cl${achieved}">CL${achieved}</span>`;
+      item.onclick = () => {
+        activeProc = code; showingSummary = false;
+        document.getElementById("btnSummary").textContent = "Overall Summary";
+        saveState(); renderAll();
+      };
+      list.appendChild(item);
+    }
+    g.appendChild(list);
+    host.appendChild(g);
+  }
+}
+
+function renderDetail() {
+  const host = document.getElementById("detail");
+  const procMeta = PROCESSES.flatMap(g => g.items).find(([c]) => c === activeProc);
+  const { achieved, trace } = capabilityLevel(activeProc);
+
+  const chain = trace.map(t => {
+    const cls = (t.currOk && t.lowerOk) ? "ok" : "fail";
+    const why = !t.lowerOk ? "lower PAs not F"
+      : (!t.currOk ? "PAs not L/F" : "passed");
+    return `<span class="step ${cls}">CL${t.cl}: ${why}</span>`;
+  }).join("");
+
+  const ups = PROC_DEPS[activeProc] || [];
+  const downs = Object.entries(PROC_DEPS).filter(([, u]) => u.includes(activeProc)).map(([d]) => d);
+  const upstreamBar = (ups.length || downs.length) ? `
+    <div class="upstream-bar">
+      ${ups.length ? `<span class="label">Upstream ⇢</span>
+        ${ups.map(u => {
+          const r = paRating(u, PAS[0]) || "–";
+          return `<span class="upstream-chip" data-goto="${u}">${u}<span class="r ${r !== '–' ? r : ''}">${r}</span></span>`;
+        }).join("")}` : ""}
+      ${ups.length && downs.length ? `<span style="color:var(--muted);">·</span>` : ""}
+      ${downs.length ? `<span class="label">Feeds ⇢</span>
+        ${downs.map(d => `<span class="upstream-chip" data-goto="${d}">${d}</span>`).join("")}` : ""}
+    </div>` : "";
+
+  host.innerHTML = `
+    <h2>${procMeta[0]} — ${procMeta[1]}</h2>
+    <div class="desc">Click a Process Attribute to expand its practices. Rate each practice — the PA rating rolls up automatically.</div>
+    ${upstreamBar}
+    <div class="result-banner">
+      <div>
+        <div class="label">Capability level</div>
+        <div class="big">CL ${achieved}</div>
+      </div>
+      <div style="flex:1">
+        <div class="label">Dependency chain</div>
+        <div class="chain">${chain}</div>
+      </div>
+    </div>
+    <div id="paHost"></div>
+    <div class="legend">
+      <span><b style="background:var(--n)"></b>N — Not (≤15%)</span>
+      <span><b style="background:var(--p)"></b>P — Partially (&gt;15–50%)</span>
+      <span><b style="background:var(--l)"></b>L — Largely (&gt;50–85%)</span>
+      <span><b style="background:var(--f)"></b>F — Fully (&gt;85%)</span>
+    </div>
+  `;
+
+  const paHost = document.getElementById("paHost");
+  // Find the lowest PA-level whose own PAs are not yet all F — first "reachable" level.
+  const pasByLevel = {};
+  for (const p of PAS) (pasByLevel[p.cl] ??= []).push(p);
+  let firstBlockedLevel = 6;
+  for (let cl = 1; cl <= 5; cl++) {
+    const allF = (pasByLevel[cl] || []).every(p => paRating(activeProc, p) === "F");
+    if (!allF) { firstBlockedLevel = cl; break; }
+  }
+  for (const pa of PAS) {
+    const locked = isPALocked(activeProc, pa);
+    const rating = paRating(activeProc, pa);
+    const prog = paProgress(activeProc, pa);
+    const isOpen = openPAs.has(pa.id) && !locked;
+    const practices = practicesFor(activeProc, pa);
+
+    // Dim class graded by distance beyond the first blocked capability level.
+    let dimCls = "";
+    if (locked) {
+      const dist = Math.max(1, pa.cl - firstBlockedLevel);
+      dimCls = " dim-" + Math.min(4, dist);
+    }
+
+    const row = document.createElement("div");
+    row.className = "pa-row" + (locked ? " locked" : "") + dimCls + (isOpen ? " open" : "");
+
+    row.innerHTML = `
+      <div class="pa-head">
+        <div style="flex:1">
+          <div class="pa-title">
+            <span class="chev">▶</span>
+            ${pa.id} ${pa.name}<span class="cl">· CL${pa.cl} · ${practices.length} practices</span>
+            ${locked ? `<span class="lock-badge">🔒 needs CL${firstBlockedLevel-1}=F</span>` : ""}
+          </div>
+          <div class="pa-desc">${pa.desc}</div>
+        </div>
+        <div class="pa-right">
+          <div class="progress" title="${prog}% rated"><span style="width:${prog}%"></span></div>
+          <span class="rating-pill ${rating||''}">${rating || '–'}</span>
+        </div>
+      </div>
+      ${locked ? `<div class="locked-msg">Locked — bring all PAs at lower capability levels to <b>F</b> first.</div>` : ""}
+      <div class="practices">
+        ${practices.map(p => {
+          const cur = getPractice(activeProc, pa.id, p.idx);
+          const note = getNote(activeProc, pa.id, p.idx);
+          const hasNote = note.length > 0;
+          const { cap, bounded } = ratingCap(activeProc, pa.id, p.idx);
+          const unrated = bounded.some(b => !b.rating);
+          const depHint = bounded.length ? (() => {
+            const parts = bounded.map(b => {
+              const crossCls = b.scope === "cross" ? " class=\"cross\"" : "";
+              const data = b.scope === "cross" ? ` data-goto="${b.proc}"` : "";
+              return `<code${crossCls}${data}>${b.label}${b.rating?`=${b.rating}`:' (unrated)'}</code>`;
+            }).join(" · ");
+            return `<div class="dep-hint${unrated?' warn':''}" title="This practice cannot exceed its prerequisite.">↳ bounded by ${parts} → max <b>${cap}</b></div>`;
+          })() : "";
+          const prereqClass = unrated && !cur ? " prereq-missing" : "";
+          return `
+            <div class="practice-wrap note-wrap${hasNote ? ' open' : ''}${prereqClass}" data-pa="${pa.id}" data-idx="${p.idx}">
+              <div class="practice">
+                <div class="pid">${p.id}</div>
+                <div class="ptxt">${p.text}</div>
+                <button class="note-btn${hasNote ? ' has-note' : ''}" title="${hasNote ? 'Edit note' : 'Add note'}">${hasNote ? '📝 Note' : '＋ Note'}</button>
+                <div class="rating" data-pa="${pa.id}" data-idx="${p.idx}">
+                  ${RATINGS.map(r => {
+                    const disallowed = R_ORDER[r] > R_ORDER[cap];
+                    const cls = [cur===r?'active':'', disallowed?'capped':''].filter(Boolean).join(' ');
+                    return `<button data-v="${r}" ${cls?`class="${cls}"`:''} ${disallowed?'disabled':''} title="${disallowed?`Capped by prerequisite — max ${cap}`:''}">${r}</button>`;
+                  }).join("")}
+                </div>
+              </div>
+              ${depHint}
+              <div class="note-area">
+                <textarea placeholder="Notes, evidence, findings for ${p.id}…" data-pa="${pa.id}" data-idx="${p.idx}">${escapeHtml(note)}</textarea>
+                <div class="note-meta"><span>Auto-saved on blur.</span><span class="note-char">${note.length} chars</span></div>
+              </div>
+            </div>`;
+        }).join("")}
+      </div>
+    `;
+    // Toggle open/close on head click (ignore clicks inside the rating widget)
+    row.querySelector(".pa-head").addEventListener("click", (e) => {
+      if (locked) return;
+      if (e.target.closest(".rating")) return;
+      if (openPAs.has(pa.id)) openPAs.delete(pa.id);
+      else openPAs.add(pa.id);
+      renderAll();
+    });
+    row.querySelectorAll(".rating[data-pa] button").forEach(b => {
+      b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (locked) return;
+        const wrap = b.parentElement;
+        const idx = parseInt(wrap.dataset.idx, 10);
+        setPractice(activeProc, pa.id, idx, b.dataset.v);
+        renderAll();
+      });
+    });
+    row.querySelectorAll(".note-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const wrap = btn.closest(".note-wrap");
+        wrap.classList.toggle("open");
+        if (wrap.classList.contains("open")) {
+          const ta = wrap.querySelector("textarea");
+          setTimeout(() => ta && ta.focus(), 0);
+        }
+      });
+    });
+    row.querySelectorAll(".note-area textarea").forEach(ta => {
+      ta.addEventListener("click", e => e.stopPropagation());
+      ta.addEventListener("input", () => {
+        const meta = ta.parentElement.querySelector(".note-char");
+        if (meta) meta.textContent = `${ta.value.length} chars`;
+      });
+      ta.addEventListener("blur", () => {
+        const paId = ta.dataset.pa;
+        const idx = parseInt(ta.dataset.idx, 10);
+        const before = getNote(activeProc, paId, idx);
+        if (ta.value !== before) {
+          setNote(activeProc, paId, idx, ta.value);
+          // Update only the note button style — avoid full re-render to preserve focus flow.
+          const wrap = ta.closest(".note-wrap");
+          const btn = wrap.querySelector(".note-btn");
+          if (ta.value.trim()) { btn.classList.add("has-note"); btn.textContent = "📝 Note"; btn.title = "Edit note"; }
+          else { btn.classList.remove("has-note"); btn.textContent = "＋ Note"; btn.title = "Add note"; }
+        }
+      });
+    });
+    paHost.appendChild(row);
+  }
+
+  // Cross-process navigation via upstream/downstream chips and cross-deps hints.
+  host.querySelectorAll("[data-goto]").forEach(el => {
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const code = el.getAttribute("data-goto");
+      if (!code) return;
+      activeProc = code;
+      showingSummary = false;
+      document.getElementById("btnSummary").textContent = "Overall Summary";
+      openPAs = new Set(["PA1.1"]);
+      saveState(); renderAll();
+    });
+  });
+}
+
+function renderSummary() {
+  const host = document.getElementById("detail");
+  const allProcs = PROCESSES.flatMap(g => g.items.map(([c, n]) => ({ group: g.group, code: c, name: n })));
+  const rows = allProcs.map(p => ({ ...p, level: capabilityLevel(p.code).achieved }));
+  const byGroup = {};
+  for (const r of rows) (byGroup[r.group] ??= []).push(r);
+  const dist = [0,0,0,0,0,0];
+  rows.forEach(r => dist[r.level]++);
+
+  host.innerHTML = `
+    <h2>Overall Summary</h2>
+    <div class="desc">Aggregated capability across all processes. Click any card to open it.</div>
+    <div class="result-banner">
+      ${dist.map((c, i) => `
+        <div style="flex:1; text-align:center; padding:0 10px; border-right:${i<5?'1px solid var(--line)':'0'};">
+          <div class="label">CL${i}</div>
+          <div class="big" style="font-size:22px; color:${["#991b1b","#92400e","#1e40af","#166534","#6b21a8","#155e75"][i]}">${c}</div>
+        </div>`).join("")}
+    </div>
+    ${Object.entries(byGroup).map(([g, items]) => `
+      <div style="margin-top:14px;">
+        <div class="group-title">${g}</div>
+        <div class="summary-grid">
+          ${items.map(r => `
+            <div class="sum-card" data-code="${r.code}">
+              <span class="code">${r.code}</span>
+              <span class="level-pill cl${r.level}">CL${r.level}</span>
+            </div>`).join("")}
+        </div>
+      </div>
+    `).join("")}
+  `;
+  host.querySelectorAll(".sum-card").forEach(el => {
+    el.onclick = () => {
+      activeProc = el.dataset.code; showingSummary = false;
+      document.getElementById("btnSummary").textContent = "Overall Summary";
+      saveState(); renderAll();
+    };
+  });
+}
+
+function renderAll() {
+  renderProcList();
+  if (showingSummary) renderSummary(); else renderDetail();
+}
+
+// ---- Toolbar ---------------------------------------------------------------
+document.getElementById("btnReset").onclick = () => {
+  if (!confirm("Reset all ratings? A snapshot of the current state will be kept in History.")) return;
+  // Force a pre-reset snapshot so nothing is ever actually lost.
+  if (idb) {
+    const ts = new Date().toISOString();
+    idbPut(STORE_SNAPS, { ts, state: JSON.parse(JSON.stringify(state)), label: "before reset" });
+  }
+  state = { practices: {}, active: activeProc };
+  saveState(); renderAll();
+};
+document.getElementById("btnHistory").onclick = async () => {
+  if (!idb) { alert("IndexedDB not available in this environment."); return; }
+  const snaps = (await idbAll(STORE_SNAPS)).sort((a, b) => b.ts.localeCompare(a.ts));
+  openHistoryModal(snaps);
+};
+
+function openHistoryModal(snaps) {
+  const existing = document.getElementById("historyModal");
+  if (existing) existing.remove();
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.id = "historyModal";
+  backdrop.innerHTML = `
+    <div class="modal">
+      <header style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h1 style="font-size:16px; margin:0;">History</h1>
+          <div class="sub">Auto-saved snapshots (most recent first). Up to ${MAX_SNAPSHOTS} kept.</div>
+        </div>
+        <button id="snapClose">Close</button>
+      </header>
+      <div class="body">
+        ${snaps.length === 0
+          ? `<div style="color:var(--muted); text-align:center; padding:20px;">No snapshots yet — make some ratings.</div>`
+          : snaps.map(s => {
+              const practices = Object.keys(s.state?.practices || {}).length;
+              const label = s.label ? ` · <b>${s.label}</b>` : "";
+              return `
+              <div class="snap-row">
+                <div>
+                  <div style="font-weight:600; font-size:13px;">${new Date(s.ts).toLocaleString()}</div>
+                  <div class="meta">${practices} practice rating${practices===1?"":"s"}${label}</div>
+                </div>
+                <div class="actions">
+                  <button data-ts="${s.ts}" class="snapRestore">Restore</button>
+                  <button data-ts="${s.ts}" class="snapDelete">Delete</button>
+                </div>
+              </div>`;
+            }).join("")}
+      </div>
+    </div>`;
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
+  document.getElementById("snapClose").onclick = () => backdrop.remove();
+  backdrop.querySelectorAll(".snapRestore").forEach(b => {
+    b.onclick = async () => {
+      const ts = b.dataset.ts;
+      if (!confirm("Restore this snapshot? Your current ratings will be saved as a snapshot first.")) return;
+      const newTs = new Date().toISOString();
+      await idbPut(STORE_SNAPS, { ts: newTs, state: JSON.parse(JSON.stringify(state)), label: "before restore" });
+      const snap = await idbGet(STORE_SNAPS, ts);
+      if (snap && snap.state) {
+        state = snap.state;
+        activeProc = state.active || activeProc;
+        await saveState();
+        backdrop.remove();
+        renderAll();
+      }
+    };
+  });
+  backdrop.querySelectorAll(".snapDelete").forEach(b => {
+    b.onclick = async () => {
+      if (!confirm("Delete this snapshot?")) return;
+      await idbDelete(STORE_SNAPS, b.dataset.ts);
+      const fresh = (await idbAll(STORE_SNAPS)).sort((a, b) => b.ts.localeCompare(a.ts));
+      backdrop.remove();
+      openHistoryModal(fresh);
+    };
+  });
+}
+document.getElementById("btnExport").onclick = () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `aspice-grading-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+};
+document.getElementById("btnImport").onclick = () => document.getElementById("fileImport").click();
+document.getElementById("fileImport").onchange = (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  const rdr = new FileReader();
+  rdr.onload = () => {
+    try {
+      const imported = JSON.parse(rdr.result);
+      if (imported && typeof imported === "object") {
+        state = Object.assign({ practices: {}, active: activeProc }, imported);
+        saveState(); renderAll();
+      }
+    } catch (err) { alert("Invalid JSON."); }
+  };
+  rdr.readAsText(f);
+};
+document.getElementById("btnSummary").onclick = () => {
+  showingSummary = !showingSummary;
+  document.getElementById("btnSummary").textContent =
+    showingSummary ? "Back to Process" : "Overall Summary";
+  renderAll();
+};
+
+(async () => {
+  setStatus("saving", "loading…");
+  await bootState();
+  renderAll();
+})();
+</script>
+</body>
+</html>
