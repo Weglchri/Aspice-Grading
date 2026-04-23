@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>ASPICE Capability Grader</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root {
     --bg: #f7f9fc;
@@ -53,12 +54,41 @@
   .proc-item {
     display: flex; align-items: center; justify-content: space-between;
     padding: 7px 10px; border-radius: 8px; cursor: pointer; border: 1px solid transparent;
+    transition: opacity .3s ease;
   }
   .proc-item:hover { background: #f1f5f9; }
   .proc-item.active { background: var(--accent-soft); border-color: #bcd5ff; }
   .proc-item.empty { opacity: .55; }
   .proc-item.empty .proc-code { color: #94a3b8; }
   .proc-item.active.empty { opacity: 1; }
+  .proc-item.disabled { opacity: .4; }
+  .proc-item.disabled.active { opacity: .6; }
+  .proc-item.disabled .level-pill { opacity: .4; }
+  .proc-label {
+    position: relative; min-width: 0; display: flex; align-items: center; overflow: hidden;
+  }
+  .proc-label::after {
+    content: ""; position: absolute; left: 0; top: 50%;
+    width: 100%; height: 1.5px; background: var(--ink);
+    transform: scaleX(0); transform-origin: left center;
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+    pointer-events: none;
+  }
+  .proc-item.disabled .proc-label::after { transform: scaleX(1); }
+  .proc-toggle {
+    width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--line);
+    background: transparent; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; padding: 0; margin-left: 8px;
+    transition: border-color .2s, background .2s, opacity .2s;
+    opacity: .3;
+  }
+  .proc-item:hover .proc-toggle { opacity: .7; }
+  .proc-toggle:hover { opacity: 1 !important; border-color: var(--accent); background: var(--accent-soft); }
+  .proc-item.disabled .proc-toggle {
+    opacity: .8; border-color: #f87171; background: #fef2f2;
+  }
+  .proc-toggle svg { width: 12px; height: 12px; transition: transform .2s; }
+  .proc-item.disabled .proc-toggle svg { transform: rotate(45deg); }
   .proc-code { font-weight: 600; font-size: 13px; }
   .proc-name { color: var(--muted); font-size: 12px; margin-left: 8px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -263,9 +293,10 @@
     <span id="dbStatus" class="db-status"><span class="dot"></span><span id="dbStatusText">starting…</span></span>
     <button id="btnHistory">History</button>
     <button id="btnReset">Reset</button>
-    <button id="btnExport">Export JSON</button>
-    <button id="btnImport">Import</button>
+    <button id="btnImport">Import Report</button>
     <input type="file" id="fileImport" accept="application/json" />
+    <button id="btnExport">Export Report</button>
+    <button id="btnExportPDF">Export PDF</button>
     <button id="btnSummary" class="primary">Overall Summary</button>
   </div>
 </header>
@@ -701,8 +732,8 @@ function ratingCap(proc, paId, idx) {
         apply({ scope: "intra", label: `BP${d+1}`, rating: getPractice(proc, paId, d) });
       }
     }
-    // 3. Cross-process (inter-discipline) bound at PA1.1
-    const ups = PROC_DEPS[proc] || [];
+    // 3. Cross-process (inter-discipline) bound at PA1.1 — skip disabled upstreams
+    const ups = (PROC_DEPS[proc] || []).filter(u => !isProcessDisabled(u));
     for (const up of ups) {
       apply({ scope: "cross", label: `${up}·PA1.1`, rating: paRating(up, PAS[0]), proc: up });
     }
@@ -781,10 +812,23 @@ function setStatus(kind, text) {
 }
 
 // ---- State -----------------------------------------------------------------
-let state = { practices: {}, notes: {}, active: "SYS.2" };
+let state = { practices: {}, notes: {}, active: "SYS.2", disabledProcs: [] };
 let activeProc = "SYS.2";
 let openPAs = new Set(["PA1.1"]);
 let showingSummary = false;
+
+function isProcessDisabled(code) {
+  return (state.disabledProcs || []).includes(code);
+}
+function toggleProcess(code) {
+  if (!state.disabledProcs) state.disabledProcs = [];
+  const idx = state.disabledProcs.indexOf(code);
+  if (idx >= 0) state.disabledProcs.splice(idx, 1);
+  else state.disabledProcs.push(code);
+  for (const proc of PROCESSES.flatMap(g => g.items.map(([c]) => c))) cascadeAll(proc);
+  saveState();
+  renderAll();
+}
 
 async function bootState() {
   // Try IndexedDB first.
@@ -810,6 +854,7 @@ async function bootState() {
     } catch (_) {}
     setStatus("error", "DB unavailable — using local only");
   }
+  if (!state.disabledProcs) state.disabledProcs = [];
   activeProc = state.active || "SYS.2";
 }
 
@@ -899,7 +944,7 @@ function cascadeAll(sourceProc) {
     const after = paRating(p, PAS[0]);
     if (after !== before) {
       for (const [downProc, ups] of Object.entries(PROC_DEPS)) {
-        if (ups.includes(p) && !visited.has(downProc)) queue.push(downProc);
+        if (ups.includes(p) && !visited.has(downProc) && !isProcessDisabled(p)) queue.push(downProc);
       }
     }
   }
@@ -1000,21 +1045,36 @@ function renderProcList() {
       const { achieved } = capabilityLevel(code);
       const hasAny = Object.keys(state.practices || {}).some(k => k.startsWith(code + "::"));
       const empty = !hasAny;
+      const dis = isProcessDisabled(code);
       const item = document.createElement("div");
       item.className = "proc-item"
         + (code === activeProc && !showingSummary ? " active" : "")
-        + (empty ? " empty" : "");
+        + (empty ? " empty" : "")
+        + (dis ? " disabled" : "");
       item.innerHTML = `
-        <div style="min-width:0; display:flex; align-items:center; overflow:hidden;">
+        <div class="proc-label">
           <span class="proc-code">${code}</span>
           <span class="proc-name">${name}</span>
         </div>
-        <span class="level-pill cl${achieved}">CL${achieved}</span>`;
-      item.onclick = () => {
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="level-pill cl${achieved}">CL${achieved}</span>
+          <button class="proc-toggle" title="${dis ? "Include" : "Exclude"} ${code} in report">
+            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <line x1="3" y1="6" x2="9" y2="6"/>
+              <line x1="6" y1="3" x2="6" y2="9"/>
+            </svg>
+          </button>
+        </div>`;
+      item.onclick = (e) => {
+        if (e.target.closest(".proc-toggle")) return;
         activeProc = code; showingSummary = false;
         document.getElementById("btnSummary").textContent = "Overall Summary";
         saveState(); renderAll();
       };
+      item.querySelector(".proc-toggle").addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleProcess(code);
+      });
       list.appendChild(item);
     }
     g.appendChild(list);
@@ -1048,9 +1108,14 @@ function renderDetail() {
         ${downs.map(d => `<span class="upstream-chip" data-goto="${d}">${d}</span>`).join("")}` : ""}
     </div>` : "";
 
+  const disabledBanner = isProcessDisabled(activeProc)
+    ? `<div style="padding:8px 12px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; margin-bottom:12px; font-size:13px; color:#991b1b; font-weight:500;">This process is excluded from the report and grading. Enable it via the sidebar checkbox.</div>`
+    : "";
+
   host.innerHTML = `
     <h2>${procMeta[0]} — ${procMeta[1]}</h2>
     <div class="desc">Click a Process Attribute to expand its practices. Rate each practice — the PA rating rolls up automatically.</div>
+    ${disabledBanner}
     ${upstreamBar}
     <div class="result-banner">
       <div>
@@ -1221,16 +1286,20 @@ function renderDetail() {
 
 function renderSummary() {
   const host = document.getElementById("detail");
-  const allProcs = PROCESSES.flatMap(g => g.items.map(([c, n]) => ({ group: g.group, code: c, name: n })));
+  const allProcs = PROCESSES.flatMap(g => g.items.map(([c, n]) => ({ group: g.group, code: c, name: n })))
+    .filter(p => !isProcessDisabled(p.code));
   const rows = allProcs.map(p => ({ ...p, level: capabilityLevel(p.code).achieved }));
   const byGroup = {};
   for (const r of rows) (byGroup[r.group] ??= []).push(r);
   const dist = [0,0,0,0,0,0];
   rows.forEach(r => dist[r.level]++);
 
+  const disCount = (state.disabledProcs || []).length;
+  const disNote = disCount ? ` (${disCount} process${disCount > 1 ? "es" : ""} excluded)` : "";
+
   host.innerHTML = `
     <h2>Overall Summary</h2>
-    <div class="desc">Aggregated capability across all processes. Click any card to open it.</div>
+    <div class="desc">Aggregated capability across enabled processes${disNote}. Click any card to open it.</div>
     <div class="result-banner">
       ${dist.map((c, i) => `
         <div style="flex:1; text-align:center; padding:0 10px; border-right:${i<5?'1px solid var(--line)':'0'};">
@@ -1273,7 +1342,7 @@ document.getElementById("btnReset").onclick = () => {
     const ts = new Date().toISOString();
     idbPut(STORE_SNAPS, { ts, state: JSON.parse(JSON.stringify(state)), label: "before reset" });
   }
-  state = { practices: {}, active: activeProc };
+  state = { practices: {}, notes: {}, active: activeProc, disabledProcs: [] };
   saveState(); renderAll();
 };
 document.getElementById("btnHistory").onclick = async () => {
@@ -1361,13 +1430,311 @@ document.getElementById("fileImport").onchange = (e) => {
     try {
       const imported = JSON.parse(rdr.result);
       if (imported && typeof imported === "object") {
-        state = Object.assign({ practices: {}, active: activeProc }, imported);
+        state = Object.assign({ practices: {}, active: activeProc, disabledProcs: [] }, imported);
         saveState(); renderAll();
       }
     } catch (err) { alert("Invalid JSON."); }
   };
   rdr.readAsText(f);
 };
+document.getElementById("btnExportPDF").onclick = () => exportPDF();
+
+function exportPDF() {
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    alert("PDF library failed to load. Check your internet connection.");
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+
+  const PAGE_W = doc.internal.pageSize.getWidth();
+  const PAGE_H = doc.internal.pageSize.getHeight();
+  const M = 40;
+  const CONTENT_W = PAGE_W - M * 2;
+  let y = M;
+  let pageNum = 1;
+
+  const COLORS = {
+    ink:   [27, 35, 48],
+    muted: [102, 112, 133],
+    line:  [229, 233, 240],
+    accent:[37, 99, 235],
+    soft:  [224, 236, 255],
+    N:     [239, 68, 68],
+    P:     [245, 158, 11],
+    L:     [59, 130, 246],
+    F:     [22, 163, 74],
+    CL0:   [153, 27, 27],
+    CL1:   [146, 64, 14],
+    CL2:   [30, 64, 175],
+    CL3:   [22, 101, 52],
+    CL4:   [107, 33, 168],
+    CL5:   [21, 94, 117],
+    bgsoft:[251, 252, 254],
+  };
+
+  function setFill(c) { doc.setFillColor(c[0], c[1], c[2]); }
+  function setDraw(c) { doc.setDrawColor(c[0], c[1], c[2]); }
+  function setText(c) { doc.setTextColor(c[0], c[1], c[2]); }
+
+  function drawFooter() {
+    setText(COLORS.muted);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.text(`ASPICE Capability Report · Page ${pageNum}`, PAGE_W / 2, PAGE_H - 20, { align: "center" });
+  }
+
+  function newPage() {
+    drawFooter();
+    doc.addPage();
+    pageNum++;
+    y = M;
+  }
+
+  function ensure(h) {
+    if (y + h > PAGE_H - M - 20) newPage();
+  }
+
+  function drawPill(x, yy, label, color, opts = {}) {
+    const fontSize = opts.fontSize || 8;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(fontSize);
+    const tw = doc.getTextWidth(label);
+    const padX = 6, h = fontSize + 4;
+    const w = tw + padX * 2;
+    setFill(color);
+    doc.roundedRect(x, yy, w, h, h / 2, h / 2, "F");
+    setText([255, 255, 255]);
+    doc.text(label, x + w / 2, yy + h - 4, { align: "center" });
+    return w;
+  }
+
+  function wrap(text, width, fontSize) {
+    doc.setFontSize(fontSize);
+    return doc.splitTextToSize(text || "", width);
+  }
+
+  // ---------- COVER ----------
+  setFill(COLORS.accent);
+  doc.rect(0, 0, PAGE_W, 140, "F");
+  setText([255, 255, 255]);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(24);
+  doc.text("ASPICE Capability Report", M, 70);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11);
+  doc.text("Automotive SPICE 3.1 assessment summary", M, 92);
+  doc.setFontSize(10);
+  doc.text(new Date().toLocaleString(), M, 112);
+
+  y = 170;
+
+  // Overall distribution — exclude disabled processes
+  const allProcs = PROCESSES.flatMap(g => g.items.map(([c, n]) => ({ group: g.group, code: c, name: n })))
+    .filter(p => !isProcessDisabled(p.code));
+  const dist = [0, 0, 0, 0, 0, 0];
+  const procLevels = {};
+  allProcs.forEach(p => {
+    const lvl = capabilityLevel(p.code).achieved;
+    procLevels[p.code] = lvl;
+    dist[lvl]++;
+  });
+
+  setText(COLORS.ink);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  doc.text("Capability level distribution", M, y);
+  y += 16;
+
+  const boxW = (CONTENT_W - 5 * 8) / 6;
+  for (let i = 0; i <= 5; i++) {
+    const x = M + i * (boxW + 8);
+    setFill(COLORS.bgsoft);
+    setDraw(COLORS.line);
+    doc.roundedRect(x, y, boxW, 60, 6, 6, "FD");
+    setText(COLORS[`CL${i}`]);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.text(String(dist[i]), x + boxW / 2, y + 32, { align: "center" });
+    setText(COLORS.muted);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text(`CL${i}`, x + boxW / 2, y + 50, { align: "center" });
+  }
+  y += 80;
+
+  // Per-group summary table
+  const groups = {};
+  allProcs.forEach(p => (groups[p.group] ??= []).push(p));
+
+  for (const [groupName, items] of Object.entries(groups)) {
+    ensure(30 + items.length * 18);
+    setText(COLORS.muted);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text(groupName.toUpperCase(), M, y);
+    y += 14;
+
+    for (const p of items) {
+      ensure(20);
+      setDraw(COLORS.line);
+      doc.setLineWidth(0.5);
+      doc.line(M, y + 12, M + CONTENT_W, y + 12);
+
+      setText(COLORS.ink);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text(p.code, M, y + 8);
+      doc.setFont("helvetica", "normal");
+      setText(COLORS.muted);
+      doc.text(p.name, M + 60, y + 8);
+
+      const lvl = procLevels[p.code];
+      drawPill(PAGE_W - M - 42, y - 2, `CL${lvl}`, COLORS[`CL${lvl}`], { fontSize: 9 });
+      y += 18;
+    }
+    y += 8;
+  }
+
+  // ---------- PER-PROCESS DETAIL ----------
+  for (const p of allProcs) {
+    newPage();
+    const lvl = procLevels[p.code];
+
+    // Process header bar
+    setFill(COLORS.accent);
+    doc.rect(M, y, CONTENT_W, 48, "F");
+    setText([255, 255, 255]);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text(`${p.code} — ${p.name}`, M + 14, y + 22);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text(p.group, M + 14, y + 38);
+    drawPill(M + CONTENT_W - 60, y + 14, `CL ${lvl}`, COLORS[`CL${lvl}`], { fontSize: 10 });
+    y += 62;
+
+    // PAs
+    for (const pa of PAS) {
+      const paR = paRating(p.code, pa);
+      const locked = isPALocked(p.code, pa);
+      const practices = practicesFor(p.code, pa);
+
+      // collect note/rating data to decide whether to include this PA
+      const rows = practices.map(pr => ({
+        id: pr.id,
+        text: pr.text,
+        rating: getPractice(p.code, pa.id, pr.idx),
+        note: getNote(p.code, pa.id, pr.idx),
+      }));
+      const hasAny = rows.some(r => r.rating || r.note);
+      if (locked && !hasAny) continue; // skip empty locked PAs for brevity
+
+      ensure(40);
+      // PA header
+      setFill(locked ? [248, 250, 252] : [251, 252, 254]);
+      setDraw(COLORS.line);
+      doc.roundedRect(M, y, CONTENT_W, 32, 6, 6, "FD");
+
+      setText(COLORS.ink);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text(`${pa.id}  ${pa.name}`, M + 10, y + 14);
+      setText(COLORS.muted);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.text(`CL${pa.cl} · ${practices.length} practices${locked ? " · locked" : ""}`, M + 10, y + 26);
+
+      if (paR) {
+        drawPill(M + CONTENT_W - 42, y + 8, paR, COLORS[paR], { fontSize: 10 });
+      } else {
+        setText(COLORS.muted);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.text("–", M + CONTENT_W - 16, y + 20);
+      }
+      y += 40;
+
+      // Practice rows
+      for (const r of rows) {
+        const textLines = wrap(r.text, CONTENT_W - 130, 9);
+        const noteLines = r.note ? wrap(r.note, CONTENT_W - 40, 9) : [];
+        const h = 10 + textLines.length * 11 + (noteLines.length ? 6 + noteLines.length * 11 + 6 : 0);
+        ensure(h + 6);
+
+        setDraw(COLORS.line);
+        doc.setLineWidth(0.3);
+
+        setText(COLORS.ink);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.text(r.id, M + 4, y + 10);
+
+        setText(COLORS.ink);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.text(textLines, M + 60, y + 10);
+
+        // rating pill
+        if (r.rating) {
+          drawPill(M + CONTENT_W - 28, y + 2, r.rating, COLORS[r.rating], { fontSize: 8 });
+        } else {
+          setText(COLORS.muted);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9);
+          doc.text("–", M + CONTENT_W - 12, y + 10);
+        }
+
+        let rowY = y + 10 + textLines.length * 11;
+
+        if (noteLines.length) {
+          rowY += 4;
+          setFill([255, 251, 235]);
+          setDraw([253, 230, 138]);
+          doc.setLineWidth(0.4);
+          const noteH = noteLines.length * 11 + 10;
+          doc.roundedRect(M + 20, rowY, CONTENT_W - 30, noteH, 4, 4, "FD");
+          setText([133, 77, 14]);
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8);
+          doc.text("NOTE", M + 26, rowY + 10);
+          setText(COLORS.ink);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9);
+          doc.text(noteLines, M + 56, rowY + 10);
+          rowY += noteH;
+        }
+
+        y = rowY + 6;
+        doc.line(M, y - 3, M + CONTENT_W, y - 3);
+      }
+      y += 8;
+    }
+  }
+
+  drawFooter();
+
+  const name = `aspice-report-${new Date().toISOString().slice(0, 10)}.pdf`;
+  try {
+    const blob = doc.output("blob");
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  } catch (err) {
+    try { doc.save(name); }
+    catch (_) {
+      // Last-resort fallback: open in a new tab so the user can save manually.
+      const url = doc.output("bloburl");
+      window.open(url, "_blank");
+    }
+  }
+}
+
 document.getElementById("btnSummary").onclick = () => {
   showingSummary = !showingSummary;
   document.getElementById("btnSummary").textContent =
