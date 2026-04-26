@@ -97,10 +97,10 @@
   }
   .level-pill.cl0 { background: #fee2e2; color: #991b1b; }
   .level-pill.cl1 { background: #fef3c7; color: #92400e; }
-  .level-pill.cl2 { background: #dbeafe; color: #1e40af; }
-  .level-pill.cl3 { background: #dcfce7; color: #166534; }
+  .level-pill.cl2 { background: #dcfce7; color: #166534; }
+  .level-pill.cl3 { background: #dbeafe; color: #1e40af; }
   .level-pill.cl4 { background: #e9d5ff; color: #6b21a8; }
-  .level-pill.cl5 { background: #cffafe; color: #155e75; }
+  .level-pill.cl5 { background: #1f2937; color: #fff; }
 
   .detail h2 { font-size: 16px; font-weight: 600; text-transform: none;
     letter-spacing: 0; color: var(--ink); margin: 0 0 4px; }
@@ -132,6 +132,30 @@
   .rating-pill.P { background: var(--p); color: #fff; }
   .rating-pill.L { background: var(--l); color: #fff; }
   .rating-pill.F { background: var(--f); color: #fff; }
+  .rating-pill.pill-overruled { opacity: .4; }
+  .cl-bar {
+    display: flex; margin-bottom: 12px; flex-shrink: 0; position: relative;
+  }
+  .cl-bar button {
+    flex: 1; font: inherit; font-size: 11px; font-weight: 600; padding: 4px 0 4px 8px;
+    border: 0; background: #f1f5f9; position: relative;
+    color: var(--muted); cursor: pointer; transition: background .15s, color .15s;
+    text-align: center; margin-left: -8px;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%, 8px 50%);
+  }
+  .cl-bar button:first-child {
+    margin-left: 0;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%);
+  }
+  .cl-bar button:last-child {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 8px 50%);
+  }
+  .cl-bar button:hover { background: #e2e8f0; }
+  .cl-bar button.on[data-cl="1"] { background: #bfdbfe; color: #1e3a5f; }
+  .cl-bar button.on[data-cl="2"] { background: #93c5fd; color: #1e3a5f; }
+  .cl-bar button.on[data-cl="3"] { background: #60a5fa; color: #fff; }
+  .cl-bar button.on[data-cl="4"] { background: #3b82f6; color: #fff; }
+  .cl-bar button.on[data-cl="5"] { background: #2563eb; color: #fff; }
   .chev { color: var(--muted); font-size: 12px; transition: transform .2s ease; display: inline-block; }
   .pa-row.open .chev { transform: rotate(90deg); }
   .practices { margin-top: 12px; border-top: 1px dashed var(--line); padding-top: 10px; display: none; }
@@ -146,26 +170,32 @@
   .practice-wrap { border-bottom: 1px solid #f1f5f9; padding: 7px 0; }
   .practice-wrap:last-child { border-bottom: 0; }
   .practice-wrap .practice { border-bottom: 0; padding: 0; }
-  .note-btn {
-    font: inherit; padding: 3px 8px; border-radius: 6px;
-    border: 1px solid var(--line); background: #fff; color: var(--muted);
-    cursor: pointer; font-size: 11px; font-weight: 600;
+  .finding-btns { display: inline-flex; gap: 4px; }
+  .finding-btn {
+    font: inherit; font-size: 10px; font-weight: 600; padding: 2px 8px;
+    border-radius: 5px; border: 1px solid var(--line); background: #fff;
+    color: var(--muted); cursor: pointer; transition: background .15s;
   }
-  .note-btn:hover { background: #f1f5f9; }
-  .note-btn.has-note { background: #fef9c3; border-color: #fde68a; color: #854d0e; }
-  .note-area {
-    display: none; margin: 8px 0 0 80px;
+  .finding-btn:hover { background: #f1f5f9; }
+  .finding-btn.s-btn { border-color: #86efac; color: #166534; }
+  .finding-btn.s-btn:hover { background: #dcfce7; }
+  .finding-btn.s-btn.active { background: #dcfce7; }
+  .finding-btn.w-btn { border-color: #fca5a5; color: #991b1b; }
+  .finding-btn.w-btn:hover { background: #fee2e2; }
+  .finding-btn.w-btn.active { background: #fee2e2; }
+  .finding-field {
+    display: none; margin: 6px 0 2px 80px;
+    border-radius: 6px; padding: 6px 8px;
   }
-  .note-wrap.open .note-area { display: block; }
-  .note-area textarea {
-    width: 100%; min-height: 60px; resize: vertical;
-    padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
-    font: inherit; font-size: 12.5px; background: #fffef5;
-    color: var(--ink); outline: none;
+  .finding-field.open { display: block; }
+  .finding-field.strength { border: 1px solid #86efac; background: #f0fdf4; }
+  .finding-field.weakness { border: 1px solid #fca5a5; background: #fef2f2; }
+  .finding-field textarea {
+    width: 100%; min-height: 40px; resize: vertical;
+    padding: 6px 8px; border: 0; border-radius: 4px;
+    font: inherit; font-size: 12px; background: transparent; color: var(--ink); outline: none;
+    vertical-align: top; display: block;
   }
-  .note-area textarea:focus { border-color: var(--accent); background: #fff; }
-  .note-meta { display: flex; justify-content: space-between; margin-top: 4px;
-    font-size: 11px; color: var(--muted); }
   .rating { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: #fff; }
   .rating button {
     border: 0; border-right: 1px solid var(--line); border-radius: 0;
@@ -234,17 +264,53 @@
   }
   .chain .step.ok { background: #dcfce7; color: #166534; }
   .chain .step.fail { background: #fee2e2; color: #991b1b; }
-  .summary-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 8px; margin-top: 8px;
+  .summary-host { max-width: 960px; margin: 0 auto; }
+  .summary-table { width: 100%; margin-top: 6px; margin-bottom: 18px; }
+  .summary-row {
+    display: flex; align-items: center; padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
   }
-  .sum-card {
-    border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
-    background: #fff; display: flex; justify-content: space-between; align-items: center;
-    cursor: pointer;
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row .s-code { font-weight: 600; font-size: 13px; color: var(--ink); width: 60px; flex-shrink: 0; }
+  .summary-row .s-name { flex: 1; font-size: 13px; color: var(--muted); }
+  .summary-row .s-pill { flex-shrink: 0; }
+  .summary-row .s-chev {
+    color: var(--muted); font-size: 12px; margin-right: 8px;
+    transition: transform .2s ease; display: inline-block; flex-shrink: 0;
   }
-  .sum-card:hover { background: #f8fafc; }
-  .sum-card .code { font-weight: 600; font-size: 12px; }
+  .summary-row.open .s-chev { transform: rotate(90deg); }
+  .summary-row { cursor: pointer; }
+  .summary-row:hover { background: #f8fafc; }
+  .summary-detail { display: none; padding: 0 12px 14px; border-bottom: 1px solid var(--line); }
+  .summary-row.open + .summary-detail { display: block; }
+  .sum-pa {
+    background: #fbfcfe; border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 12px; margin-top: 10px;
+  }
+  .sum-pa-head {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px;
+  }
+  .sum-pa-head .pa-label { font-weight: 600; color: var(--ink); }
+  .sum-pa-head .pa-meta { color: var(--muted); font-size: 11px; margin-left: 6px; }
+  .sum-practice {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 6px 0; border-bottom: 1px solid #f1f5f9; font-size: 12px;
+  }
+  .sum-practice:last-child { border-bottom: none; }
+  .sum-practice .sp-id { font-weight: 600; color: var(--ink); width: 60px; flex-shrink: 0; font-size: 11px; }
+  .sum-practice .sp-txt { flex: 1; color: var(--ink); font-size: 12px; }
+  .sum-practice .sp-r { flex-shrink: 0; }
+  .sum-note {
+    margin: 4px 0 2px 0; padding: 5px 8px 5px 68px;
+    border-radius: 4px; font-size: 11px; white-space: pre-wrap; text-align: left;
+  }
+  .cl-filter {
+    cursor: pointer; transition: opacity .15s;
+    user-select: none;
+  }
+  .cl-filter:hover { opacity: .8; }
+  .cl-filter.active { box-shadow: 0 0 0 2px var(--accent); border-radius: 6px; }
   .legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;
     color: var(--muted); font-size: 11px; }
   .legend span b { display: inline-block; width: 10px; height: 10px;
@@ -307,11 +373,11 @@
   }
   .mgmt-link {
     display: inline-flex; align-items: center; gap: 6px;
-    cursor: pointer; font-size: 11px; font-weight: 400; letter-spacing: .03em;
+    cursor: pointer; font-size: 13px; font-weight: 400; letter-spacing: .04em;
     color: var(--muted); transition: color .15s; background: none; border: none; padding: 0;
   }
   .mgmt-link:hover { color: var(--ink); }
-  .mgmt-link svg { width: 13px; height: 13px; flex-shrink: 0; opacity: .6; }
+  .mgmt-link svg { width: 15px; height: 15px; flex-shrink: 0; opacity: .6; }
   .collapse-btn {
     display: inline-flex; align-items: center; justify-content: center;
     width: 24px; height: 24px; border-radius: 6px;
@@ -386,10 +452,11 @@
     margin-bottom: 16px; overflow: hidden;
   }
   .review-proc-head {
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; gap: 10px;
     padding: 14px 18px; background: #f8fafc; border-bottom: 1px solid var(--line);
     cursor: pointer;
   }
+  .review-proc-head > .chev { flex-shrink: 0; }
   .review-proc-head:hover { background: #f1f5f9; }
   .review-proc-head .title { font-weight: 600; font-size: 14px; }
   .review-proc-head .meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
@@ -405,16 +472,25 @@
   }
   .review-pa-head .pa-info { color: var(--muted); font-weight: 500; font-size: 11px; margin-left: 8px; }
   .review-practice {
-    display: grid; grid-template-columns: 64px 1fr auto; gap: 8px;
-    align-items: start; padding: 6px 0; border-top: 1px solid #f1f5f9;
+    display: grid; grid-template-columns: 64px 1fr auto auto; gap: 8px;
+    align-items: center; padding: 6px 0; border-top: 1px solid #f1f5f9;
     font-size: 12.5px;
   }
   .review-practice .pid { font-weight: 600; color: var(--ink); }
+  .pid-link { color: inherit; text-decoration: none; }
+  .pid-link:hover { color: var(--accent); text-decoration: underline; }
   .review-practice .ptxt { color: var(--ink); }
+  .review-practice.overruled { }
+  .review-tag {
+    display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em; padding: 1px 5px; border-radius: 4px;
+    white-space: nowrap;
+  }
+  .review-tag.overruled { background: #fef3c7; color: #92400e; }
+  .review-tag.inconsistent { background: #fef3c7; color: #92400e; }
   .review-note {
-    grid-column: 2 / -1; margin-top: 2px; padding: 5px 8px;
-    background: #fffef5; border: 1px solid #fde68a; border-radius: 4px;
-    font-size: 11px; color: #854d0e; white-space: pre-wrap;
+    grid-column: 1 / -1; margin-top: 2px; padding: 5px 8px 5px 72px;
+    border-radius: 4px; font-size: 11px; white-space: pre-wrap; text-align: left;
   }
   .review-stats {
     display: flex; gap: 16px; flex-wrap: wrap;
@@ -422,6 +498,13 @@
     font-size: 12px; color: var(--muted);
   }
   .review-stats .stat-val { font-weight: 700; color: var(--ink); }
+  .review-search {
+    width: 100%; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px;
+    font: inherit; font-size: 13px; background: #fff; color: var(--ink); outline: none;
+    margin-bottom: 16px;
+  }
+  .review-search:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .review-search::placeholder { color: #b0bac7; }
 
   /* ---- Review: drop zone & comparison ---- */
   .review-dropzone {
@@ -442,7 +525,7 @@
   }
   .review-compare-bar .label { font-weight: 600; color: #4338ca; }
   .review-compare-bar button { font-size: 12px; }
-  .review-practice.compare { grid-template-columns: 64px 1fr auto auto; }
+  .review-practice.compare { grid-template-columns: 64px 1fr auto auto auto; }
   .review-pa-head.compare { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; }
   .review-proc-head.compare .pills { display: flex; align-items: center; gap: 6px; }
   .pill-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
@@ -478,7 +561,7 @@
     </div>
     <div class="nav-drawer-item" id="drawerReset" style="color: var(--n);">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-      <div>Reset<div class="desc">Clear all ratings and notes</div></div>
+      <div>Reset<div class="desc">Clear all ratings and findings</div></div>
     </div>
   </div>
   <div class="nav-drawer-footer" id="navAccount">
@@ -499,15 +582,25 @@
     <span id="dbStatus" class="db-status"><span class="dot"></span><span id="dbStatusText">starting…</span></span>
     <span class="divider"></span>
     <div class="view-tabs">
-      <button class="view-tab active" data-view="evaluate">Evaluate</button>
-      <button class="view-tab" data-view="review">Review</button>
-      <button class="view-tab" data-view="summary">Summary</button>
+      <button class="view-tab active" data-view="evaluate">Assessment</button>
+      <button class="view-tab" data-view="review">Validation</button>
+      <button class="view-tab" data-view="summary">Reporting</button>
     </div>
   </div>
 </header>
 <main>
   <aside class="panel aside-panel">
-    <h2>Processes</h2>
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+      <h2 style="margin:0;">Processes</h2>
+      <button id="toggleAllProcs" class="collapse-btn" title="Toggle all processes" style="width:auto; height:auto; padding:2px 6px; font-size:10px; font-weight:600; color:var(--muted);">All</button>
+    </div>
+    <div class="cl-bar" id="clBar">
+      <button data-cl="1" class="on">CL1</button>
+      <button data-cl="2">CL2</button>
+      <button data-cl="3">CL3</button>
+      <button data-cl="4">CL4</button>
+      <button data-cl="5">CL5</button>
+    </div>
     <div id="procList" class="proc-scroll"></div>
     <div class="panel-footer">
       <button id="mgmtLink" class="mgmt-link">
@@ -1027,9 +1120,10 @@ function setStatus(kind, text) {
 }
 
 // ---- State -----------------------------------------------------------------
-let state = { practices: {}, notes: {}, active: "SYS.2", disabledProcs: [] };
+let state = { practices: {}, findings: {}, active: "SYS.2", disabledProcs: [] };
 let activeProc = "SYS.2";
 let openPAs = new Set(["PA1.1"]);
+let visibleCLs = new Set([1]);
 let showingSummary = false;
 let compReport = null;
 
@@ -1111,13 +1205,26 @@ async function bootState() {
     setStatus("error", "DB unavailable — using local only");
   }
   if (!state.disabledProcs) state.disabledProcs = [];
+  if (!state.findings) state.findings = {};
+  if (state.notes && !Object.keys(state.findings).length) {
+    for (const [k, v] of Object.entries(state.notes)) {
+      if (v && v.trim()) state.findings[k] = [{ type: 'weakness', text: v }];
+    }
+  }
+  for (const [k, v] of Object.entries(state.findings)) {
+    if (v && !Array.isArray(v)) {
+      state.findings[k] = (v.type || (v.text && v.text.trim())) ? [{ type: v.type || 'weakness', text: v.text || '' }] : [];
+    }
+  }
   activeProc = state.active || "SYS.2";
+  if (Array.isArray(state.visibleCLs)) visibleCLs = new Set(state.visibleCLs);
 }
 
 let snapshotTimer = null;
 let saveTimer = null;
 async function saveState() {
   state.active = activeProc;
+  state.visibleCLs = [...visibleCLs];
   // Immediate mirror to localStorage (sync, survives IDB wipe).
   try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (_) {}
   // Debounced write to IDB + snapshot (avoid spamming on every click).
@@ -1161,17 +1268,25 @@ function setPractice(proc, paId, idx, val) {
 }
 
 function cascadeAll(sourceProc) {}
-function getNote(proc, paId, idx) {
-  if (!state.notes) state.notes = {};
-  return state.notes[practiceKey(proc, paId, idx)] || "";
+function getFindings(proc, paId, idx) {
+  if (!state.findings) state.findings = {};
+  const v = state.findings[practiceKey(proc, paId, idx)];
+  if (!v) return [];
+  if (Array.isArray(v)) return v;
+  if (v.type || (v.text && v.text.trim())) return [{ type: v.type || 'weakness', text: v.text || '' }];
+  return [];
 }
-function setNote(proc, paId, idx, text) {
-  if (!state.notes) state.notes = {};
+function setFindings(proc, paId, idx, arr) {
+  if (!state.findings) state.findings = {};
   const k = practiceKey(proc, paId, idx);
-  const trimmed = (text || "").trim();
-  if (!trimmed) delete state.notes[k];
-  else state.notes[k] = text;
+  const clean = (arr || []).filter(f => f.type && f.text.trim());
+  if (!clean.length) delete state.findings[k];
+  else state.findings[k] = clean;
   saveState();
+}
+function getNote(proc, paId, idx) {
+  const fs = getFindings(proc, paId, idx);
+  return fs.map(f => f.text).join('\n');
 }
 
 // ---- Practices for a PA on a process --------------------------------------
@@ -1342,10 +1457,10 @@ function renderDetail() {
   `;
 
   const paHost = document.getElementById("paHost");
-  // Find the lowest PA-level whose own PAs are not yet all F — first "reachable" level.
   const pasByLevel = {};
   for (const p of PAS) (pasByLevel[p.cl] ??= []).push(p);
   for (const pa of PAS) {
+    if (!visibleCLs.has(pa.cl)) continue;
     const rating = paRating(activeProc, pa);
     const prog = paProgress(activeProc, pa);
     const isOpen = openPAs.has(pa.id);
@@ -1371,8 +1486,9 @@ function renderDetail() {
       <div class="practices">
         ${practices.map(p => {
           const cur = getPractice(activeProc, pa.id, p.idx);
-          const note = getNote(activeProc, pa.id, p.idx);
-          const hasNote = note.length > 0;
+          const findings = getFindings(activeProc, pa.id, p.idx);
+          const sText = findings.filter(f => f.type === 'strength').map(f => f.text).join('\n');
+          const wText = findings.filter(f => f.type === 'weakness').map(f => f.text).join('\n');
           const { cap, bounded } = ratingCap(activeProc, pa.id, p.idx);
           const unrated = bounded.some(b => !b.rating);
           const depHint = bounded.length ? (() => {
@@ -1385,11 +1501,14 @@ function renderDetail() {
           })() : "";
           const prereqClass = unrated && !cur ? " prereq-missing" : "";
           return `
-            <div class="practice-wrap note-wrap${hasNote ? ' open' : ''}${prereqClass}" data-pa="${pa.id}" data-idx="${p.idx}">
+            <div class="practice-wrap${prereqClass}" data-pa="${pa.id}" data-idx="${p.idx}">
               <div class="practice">
                 <div class="pid">${p.id}</div>
                 <div class="ptxt">${p.text}</div>
-                <button class="note-btn${hasNote ? ' has-note' : ''}" title="${hasNote ? 'Edit note' : 'Add note'}">${hasNote ? '📝 Note' : '＋ Note'}</button>
+                <div class="finding-btns">
+                  <button class="finding-btn s-btn${sText ? ' active' : ''}" data-pa="${pa.id}" data-idx="${p.idx}" data-type="strength">+ Strength</button>
+                  <button class="finding-btn w-btn${wText ? ' active' : ''}" data-pa="${pa.id}" data-idx="${p.idx}" data-type="weakness">+ Weakness</button>
+                </div>
                 <div class="rating" data-pa="${pa.id}" data-idx="${p.idx}">
                   ${RATINGS.map(r => {
                     const disallowed = R_ORDER[r] > R_ORDER[cap];
@@ -1399,9 +1518,11 @@ function renderDetail() {
                 </div>
               </div>
               ${depHint}
-              <div class="note-area">
-                <textarea placeholder="Notes, evidence, findings for ${p.id}…" data-pa="${pa.id}" data-idx="${p.idx}">${escapeHtml(note)}</textarea>
-                <div class="note-meta"><span>Auto-saved on blur.</span><span class="note-char">${note.length} chars</span></div>
+              <div class="finding-field strength${sText ? ' open' : ''}" data-pa="${pa.id}" data-idx="${p.idx}" data-type="strength">
+                <textarea placeholder="Describe strength…" data-pa="${pa.id}" data-idx="${p.idx}" data-type="strength">${escapeHtml(sText)}</textarea>
+              </div>
+              <div class="finding-field weakness${wText ? ' open' : ''}" data-pa="${pa.id}" data-idx="${p.idx}" data-type="weakness">
+                <textarea placeholder="Describe weakness…" data-pa="${pa.id}" data-idx="${p.idx}" data-type="weakness">${escapeHtml(wText)}</textarea>
               </div>
             </div>`;
         }).join("")}
@@ -1423,35 +1544,29 @@ function renderDetail() {
         renderAll();
       });
     });
-    row.querySelectorAll(".note-btn").forEach(btn => {
+    row.querySelectorAll(".finding-btn").forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
-        const wrap = btn.closest(".note-wrap");
-        wrap.classList.toggle("open");
-        if (wrap.classList.contains("open")) {
-          const ta = wrap.querySelector("textarea");
+        const wrap = btn.closest(".practice-wrap");
+        const field = wrap.querySelector(`.finding-field.${btn.dataset.type}`);
+        field.classList.toggle("open");
+        if (field.classList.contains("open")) {
+          const ta = field.querySelector("textarea");
           setTimeout(() => ta && ta.focus(), 0);
         }
       });
     });
-    row.querySelectorAll(".note-area textarea").forEach(ta => {
+    row.querySelectorAll(".finding-field textarea").forEach(ta => {
       ta.addEventListener("click", e => e.stopPropagation());
-      ta.addEventListener("input", () => {
-        const meta = ta.parentElement.querySelector(".note-char");
-        if (meta) meta.textContent = `${ta.value.length} chars`;
-      });
       ta.addEventListener("blur", () => {
         const paId = ta.dataset.pa;
         const idx = parseInt(ta.dataset.idx, 10);
-        const before = getNote(activeProc, paId, idx);
-        if (ta.value !== before) {
-          setNote(activeProc, paId, idx, ta.value);
-          // Update only the note button style — avoid full re-render to preserve focus flow.
-          const wrap = ta.closest(".note-wrap");
-          const btn = wrap.querySelector(".note-btn");
-          if (ta.value.trim()) { btn.classList.add("has-note"); btn.textContent = "📝 Note"; btn.title = "Edit note"; }
-          else { btn.classList.remove("has-note"); btn.textContent = "＋ Note"; btn.title = "Add note"; }
-        }
+        const type = ta.dataset.type;
+        const fs = getFindings(activeProc, paId, idx).filter(f => f.type !== type);
+        if (ta.value.trim()) fs.push({ type, text: ta.value });
+        setFindings(activeProc, paId, idx, fs);
+        const btn = row.querySelector(`.finding-btn[data-type="${type}"][data-pa="${paId}"][data-idx="${idx}"]`);
+        if (btn) btn.classList.toggle("active", !!ta.value.trim());
       });
     });
     paHost.appendChild(row);
@@ -1472,48 +1587,109 @@ function renderDetail() {
   });
 }
 
+let summaryFilter = null;
+
+function isProcessRated(code) {
+  return Object.keys(state.practices || {}).some(k => k.startsWith(code + "::"));
+}
+
 function renderSummary() {
   const host = document.getElementById("detail");
   const allProcs = PROCESSES.flatMap(g => g.items.map(([c, n]) => ({ group: g.group, code: c, name: n })))
     .filter(p => !isProcessDisabled(p.code));
-  const rows = allProcs.map(p => ({ ...p, level: capabilityLevel(p.code).achieved }));
+  const allRows = allProcs.map(p => {
+    const rated = isProcessRated(p.code);
+    return { ...p, level: rated ? capabilityLevel(p.code).achieved : -1 };
+  });
+  const rows = allRows.filter(r => r.level !== -1);
   const byGroup = {};
   for (const r of rows) (byGroup[r.group] ??= []).push(r);
-  const dist = [0,0,0,0,0,0];
+
+  const dist = {};
+  for (let i = 0; i <= 5; i++) dist[i] = 0;
   rows.forEach(r => dist[r.level]++);
 
   const disCount = (state.disabledProcs || []).length;
   const disNote = disCount ? ` (${disCount} process${disCount > 1 ? "es" : ""} excluded)` : "";
 
-  host.innerHTML = `
+  const filterLabels = { 0: "CL0", 1: "CL1", 2: "CL2", 3: "CL3", 4: "CL4", 5: "CL5" };
+  const filterNote = summaryFilter !== null ? ` — showing ${filterLabels[summaryFilter]}` : "";
+
+  const filtered = summaryFilter !== null
+    ? rows.filter(r => r.level === summaryFilter)
+    : rows;
+  const filteredByGroup = {};
+  for (const r of filtered) (filteredByGroup[r.group] ??= []).push(r);
+
+  const clColors = ["#991b1b","#92400e","#166534","#1e40af","#6b21a8","#1f2937"];
+
+  host.innerHTML = `<div class="summary-host">
     <h2>Overall Summary</h2>
-    <div class="desc">Aggregated capability across enabled processes${disNote}. Click any card to open it.</div>
+    <div class="desc">Capability level distribution${disNote}${filterNote}. Click a level to filter.</div>
     <div class="result-banner">
-      ${dist.map((c, i) => `
-        <div style="flex:1; text-align:center; padding:0 10px; border-right:${i<5?'1px solid var(--line)':'0'};">
+      ${[0,1,2,3,4,5].map(i => `
+        <div class="cl-filter${summaryFilter === i ? ' active' : ''}" data-cl="${i}" style="flex:1; text-align:center; padding:6px 10px; border-right:${i<5?'1px solid var(--line)':'0'};">
           <div class="label">CL${i}</div>
-          <div class="big" style="font-size:22px; color:${["#991b1b","#92400e","#1e40af","#166534","#6b21a8","#155e75"][i]}">${c}</div>
+          <div class="big" style="font-size:22px; color:${clColors[i]}">${dist[i]}</div>
         </div>`).join("")}
     </div>
-    ${Object.entries(byGroup).map(([g, items]) => `
-      <div style="margin-top:14px;">
+    ${Object.entries(filteredByGroup).map(([g, items]) => `
+      <div style="margin-top:18px;">
         <div class="group-title">${g}</div>
-        <div class="summary-grid">
-          ${items.map(r => `
-            <div class="sum-card" data-code="${r.code}">
-              <span class="code">${r.code}</span>
-              <span class="level-pill cl${r.level}">CL${r.level}</span>
-            </div>`).join("")}
+        <div class="summary-table">
+          ${items.map(r => {
+            const procDetail = PAS.filter(pa => visibleCLs.has(pa.cl)).map(pa => {
+              const practices = practicesFor(r.code, pa);
+              const paR = paRating(r.code, pa);
+              const practiceRows = practices.map(pr => {
+                const rating = getPractice(r.code, pa.id, pr.idx);
+                const findings = getFindings(r.code, pa.id, pr.idx);
+                const findingNotes = findings.filter(f => f.text.trim()).map(f =>
+                  `<div class="sum-note" style="border-color:${f.type === 'strength' ? '#86efac' : '#fca5a5'}; background:${f.type === 'strength' ? '#f0fdf4' : '#fef2f2'}; color:${f.type === 'strength' ? '#166534' : '#991b1b'};"><strong>${f.type === 'strength' ? 'Strength' : 'Weakness'}:</strong> ${escapeHtml(f.text)}</div>`
+                ).join('');
+                return `<div class="sum-practice">
+                  <span class="sp-id">${pr.id}</span>
+                  <span class="sp-txt">${pr.text}</span>
+                  <span class="sp-r">${rating
+                    ? `<span class="rating-pill ${rating}">${rating}</span>`
+                    : '<span class="rating-pill">–</span>'}</span>
+                </div>${findingNotes}`;
+              }).join("");
+              return `<div class="sum-pa">
+                <div class="sum-pa-head">
+                  <span><span class="pa-label">${pa.id} ${pa.name}</span><span class="pa-meta">CL${pa.cl} · ${practices.length} practices</span></span>
+                  <span>${paR
+                    ? `<span class="rating-pill ${paR}">${paR}</span>`
+                    : '<span class="rating-pill">–</span>'}</span>
+                </div>
+                ${practiceRows}
+              </div>`;
+            }).join("");
+            return `
+            <div class="summary-row" data-code="${r.code}">
+              <span class="s-chev">▶</span>
+              <span class="s-code">${r.code}</span>
+              <span class="s-name">${r.name}</span>
+              <span class="s-pill">${r.level === -1
+                ? '<span class="level-pill" style="background:#f1f5f9; color:var(--muted);">N/R</span>'
+                : `<span class="level-pill cl${r.level}">CL${r.level}</span>`}</span>
+            </div>
+            <div class="summary-detail">${procDetail}</div>`;
+          }).join("")}
         </div>
       </div>
     `).join("")}
-  `;
-  host.querySelectorAll(".sum-card").forEach(el => {
+  </div>`;
+
+  host.querySelectorAll(".cl-filter").forEach(el => {
     el.onclick = () => {
-      activeProc = el.dataset.code; currentView = "evaluate"; showingSummary = false;
-      document.querySelectorAll(".nav-drawer-item").forEach(i => i.classList.toggle("active", i.dataset.view === "evaluate"));
-      saveState(); renderAll();
+      const cl = parseInt(el.dataset.cl, 10);
+      summaryFilter = summaryFilter === cl ? null : cl;
+      renderSummary();
     };
+  });
+  host.querySelectorAll(".summary-row[data-code]").forEach(el => {
+    el.onclick = () => el.classList.toggle("open");
   });
 }
 
@@ -1540,8 +1716,31 @@ function renderReview() {
     sum + PAS.reduce((s, pa) => s + practicesFor(p.code, pa).length, 0), 0);
   const ratedPractices = allProcs.reduce((sum, p) =>
     sum + PAS.reduce((s, pa) => s + practicesFor(p.code, pa).filter(pr => getPractice(p.code, pa.id, pr.idx)).length, 0), 0);
-  const notesCount = allProcs.reduce((sum, p) =>
-    sum + PAS.reduce((s, pa) => s + practicesFor(p.code, pa).filter(pr => getNote(p.code, pa.id, pr.idx)).length, 0), 0);
+  let strengthCount = 0, weaknessCount = 0;
+  for (const p of allProcs) {
+    for (const pa of PAS) {
+      for (const pr of practicesFor(p.code, pa)) {
+        for (const f of getFindings(p.code, pa.id, pr.idx)) {
+          if (f.type === 'strength') strengthCount++; else if (f.type === 'weakness') weaknessCount++;
+        }
+      }
+    }
+  }
+
+  let totalInconsistencies = 0;
+  let totalInconsistent = 0;
+  for (const p of allProcs) {
+    for (const pa of PAS) {
+      for (const pr of practicesFor(p.code, pa)) {
+        const r = getPractice(p.code, pa.id, pr.idx);
+        if (r) { const { cap } = ratingCap(p.code, pa.id, pr.idx); if (R_ORDER[r] > R_ORDER[cap]) totalInconsistencies++; }
+      }
+    }
+    const paRatingsArr = PAS.map(pa => ({ cl: pa.cl, rating: paRating(p.code, pa),
+      anyRated: practicesFor(p.code, pa).some(pr => getPractice(p.code, pa.id, pr.idx)) }));
+    if (paRatingsArr.some(pr => pr.anyRated && pr.cl > 1 && paRatingsArr.some(lo => lo.cl < pr.cl && lo.anyRated && lo.rating !== 'F')))
+      totalInconsistent++;
+  }
 
   const importArea = cmp
     ? `<div class="review-compare-bar">
@@ -1558,13 +1757,17 @@ function renderReview() {
 
   host.innerHTML = `<div class="review-host">
     <h2>Review${cmp ? ' — Comparison' : ''}</h2>
-    <div class="desc">${cmp ? 'Side-by-side comparison: Current vs. imported report. Green = improved, red = regressed.' : 'Read-only view of all processes, ratings and notes. Click a process to expand.'}</div>
+    <div class="desc">${cmp ? 'Side-by-side comparison: Current vs. imported report. Green = improved, red = regressed.' : 'Read-only view of all processes, ratings and findings. Click a process to expand.'}</div>
     ${importArea}
     <div class="review-stats" style="border-radius:10px; margin-bottom:16px;">
       <span>Processes: <span class="stat-val">${allProcs.length}</span></span>
       <span>Rated: <span class="stat-val">${ratedPractices} / ${totalPractices}</span> practices</span>
-      <span>Notes: <span class="stat-val">${notesCount}</span></span>
+      <span style="color:#166534;">Strengths: <span class="stat-val" style="color:#166534;">${strengthCount}</span></span>
+      <span style="color:#991b1b;">Weaknesses: <span class="stat-val" style="color:#991b1b;">${weaknessCount}</span></span>
+      ${totalInconsistencies ? `<span style="color:#92400e;">Overruled: <span class="stat-val" style="color:#92400e;">${totalInconsistencies}</span></span>` : ''}
+      ${totalInconsistent ? `<span style="color:#92400e;">Inconsistent processes: <span class="stat-val" style="color:#92400e;">${totalInconsistent}</span></span>` : ''}
     </div>
+    <input type="text" id="reviewSearch" class="review-search" placeholder="Search processes — e.g. SUP.1, Project Management, 6…" />
     ${Object.entries(byGroup).map(([g, items]) => `
       <div class="group-title" style="margin-top:18px;">${g}</div>
       ${items.map(p => {
@@ -1573,6 +1776,15 @@ function renderReview() {
         const procRatedCount = PAS.reduce((s, pa) =>
           s + practicesFor(p.code, pa).filter(pr => getPractice(p.code, pa.id, pr.idx)).length, 0);
         const procTotalCount = PAS.reduce((s, pa) => s + practicesFor(p.code, pa).length, 0);
+        let procInconsistencies = 0;
+
+        // Inconsistency: higher-CL PA has ratings but a lower-CL PA is not all F
+        const paRatings = PAS.map(pa => ({ pa, rating: paRating(p.code, pa), cl: pa.cl,
+          anyRated: practicesFor(p.code, pa).some(pr => getPractice(p.code, pa.id, pr.idx)) }));
+        const procInconsistent = paRatings.some(pr => {
+          if (!pr.anyRated || pr.cl <= 1) return false;
+          return paRatings.some(lo => lo.cl < pr.cl && lo.anyRated && lo.rating !== 'F');
+        });
 
         const paBlocks = PAS.map(pa => {
           const practices = practicesFor(p.code, pa);
@@ -1591,18 +1803,30 @@ function renderReview() {
                 const r = getPractice(p.code, pa.id, pr.idx);
                 const cr = cmp ? cmpGetPractice(p.code, pa.id, pr.idx) : null;
                 if (!r && !cr) return "";
-                const note = getNote(p.code, pa.id, pr.idx);
+                const findings = getFindings(p.code, pa.id, pr.idx);
                 const dc = (r && cr) ? diffClass(r, cr) : "diff-same";
-                return `<div class="review-practice${cmp ? ' compare' : ''}">
-                  <span class="pid">${pr.id}</span>
+                const { cap } = ratingCap(p.code, pa.id, pr.idx);
+                const overruled = r && R_ORDER[r] > R_ORDER[cap];
+                if (overruled) procInconsistencies++;
+                const findingNotes = findings.filter(f => f.text.trim()).map(f =>
+                  `<div class="review-note" style="border-color:${f.type === 'strength' ? '#86efac' : '#fca5a5'}; background:${f.type === 'strength' ? '#f0fdf4' : '#fef2f2'}; color:${f.type === 'strength' ? '#166534' : '#991b1b'};"><strong>${f.type === 'strength' ? 'Strength' : 'Weakness'}:</strong> ${escapeHtml(f.text)}</div>`
+                ).join('');
+                return `<div class="review-practice${cmp ? ' compare' : ''}${overruled ? ' overruled' : ''}">
+                  <span class="pid"><a class="pid-link" data-proc="${p.code}" data-pa="${pa.id}" href="#">${pr.id}</a></span>
                   <span class="ptxt">${pr.text}</span>
                   ${cmp ? `<span class="rating-pill ${cr||''}" style="opacity:.6; font-size:10px;" title="Imported">${cr || '–'}</span>` : ''}
-                  <span class="rating-pill ${r||''} ${cmp ? dc : ''}" title="Current">${r || '–'}</span>
-                  ${note ? `<div class="review-note">${escapeHtml(note)}</div>` : ""}
+                  ${overruled ? `<span class="review-tag overruled" title="Rating ${r} exceeds recommended max ${cap}">overruled</span>` : '<span></span>'}
+                  <span class="rating-pill ${r||''} ${cmp ? dc : ''}${overruled ? ' pill-overruled' : ''}" title="Current">${r || '–'}</span>
+                  ${findingNotes}
                 </div>`;
               }).join("")}
             </div>`;
         }).filter(Boolean).join("");
+
+        const procTags = [
+          procInconsistencies ? `<span class="review-tag overruled">${procInconsistencies} overruled</span>` : '',
+          procInconsistent ? '<span class="review-tag inconsistent">inconsistent</span>' : '',
+        ].filter(Boolean).join(' ');
 
         const clDiff = cmp && cmpAchieved !== null
           ? (achieved > cmpAchieved ? 'diff-up' : achieved < cmpAchieved ? 'diff-down' : 'diff-same')
@@ -1611,14 +1835,14 @@ function renderReview() {
         return `
           <div class="review-proc" data-proc="${p.code}">
             <div class="review-proc-head${cmp ? ' compare' : ''}">
-              <div>
-                <div class="title">${p.code} — ${p.name}</div>
+              <span class="chev">▶</span>
+              <div style="flex:1;">
+                <div class="title">${p.code} — ${p.name} ${procTags}</div>
                 <div class="meta">${procRatedCount} / ${procTotalCount} practices rated</div>
               </div>
               <div style="display:flex; align-items:center; gap:8px;">
                 ${cmp && cmpAchieved !== null ? `<span class="level-pill cl${cmpAchieved}" style="opacity:.55;" title="Imported">CL${cmpAchieved}</span><span style="color:var(--muted);">→</span>` : ''}
                 <span class="level-pill cl${achieved} ${clDiff}">CL${achieved}</span>
-                <span class="chev">▶</span>
               </div>
             </div>
             <div class="review-proc-body">${paBlocks || '<div style="padding:14px 18px; color:var(--muted); font-size:13px; font-style:italic;">No ratings yet.</div>'}</div>
@@ -1630,6 +1854,18 @@ function renderReview() {
   // Wire up expand toggles
   host.querySelectorAll(".review-proc-head").forEach(el => {
     el.addEventListener("click", () => el.closest(".review-proc").classList.toggle("open"));
+  });
+
+  // Wire up practice ID links -> navigate to Assessment
+  host.querySelectorAll(".pid-link").forEach(el => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      activeProc = el.dataset.proc;
+      openPAs = new Set([el.dataset.pa]);
+      saveState();
+      setView("evaluate");
+    });
   });
 
   // Wire up import drop zone
@@ -1655,13 +1891,36 @@ function renderReview() {
   if (clearBtn) {
     clearBtn.addEventListener("click", () => { compReport = null; renderAll(); });
   }
+
+  // Wire up search
+  const searchInput = document.getElementById("reviewSearch");
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      const q = searchInput.value.toLowerCase().trim();
+      host.querySelectorAll(".review-proc").forEach(el => {
+        const code = el.dataset.proc.toLowerCase();
+        const title = el.querySelector(".title").textContent.toLowerCase();
+        el.style.display = !q || code.includes(q) || title.includes(q) ? "" : "none";
+      });
+      host.querySelectorAll(".group-title").forEach(gt => {
+        const sibs = [];
+        let next = gt.nextElementSibling;
+        while (next && !next.classList.contains("group-title")) {
+          if (next.classList.contains("review-proc")) sibs.push(next);
+          next = next.nextElementSibling;
+        }
+        gt.style.display = sibs.some(s => s.style.display !== "none") ? "" : "none";
+      });
+    });
+  }
 }
 
 function renderAll() {
   const mainEl = document.querySelector("main");
-  mainEl.classList.toggle("review-mode", currentView === "review");
-  document.querySelector("main aside").style.display = currentView === "review" ? "none" : "";
-  if (currentView !== "review") renderProcList();
+  const hideAside = currentView === "review" || currentView === "summary";
+  mainEl.classList.toggle("review-mode", hideAside);
+  document.querySelector("main aside").style.display = hideAside ? "none" : "";
+  if (currentView === "evaluate") renderProcList();
   if (currentView === "summary") renderSummary();
   else if (currentView === "review") renderReview();
   else renderDetail();
@@ -1675,7 +1934,7 @@ document.getElementById("drawerReset").onclick = () => {
     const ts = new Date().toISOString();
     idbPut(STORE_SNAPS, { ts, state: JSON.parse(JSON.stringify(state)), label: "before reset" });
   }
-  state = { practices: {}, notes: {}, active: activeProc, disabledProcs: [] };
+  state = { practices: {}, findings: {}, active: activeProc, disabledProcs: [] };
   saveState(); renderAll(); closeDrawer();
 };
 document.getElementById("drawerHistory").onclick = async () => {
@@ -1818,10 +2077,10 @@ async function exportPDF() {
     F:     [22, 163, 74],
     CL0:   [153, 27, 27],
     CL1:   [146, 64, 14],
-    CL2:   [30, 64, 175],
-    CL3:   [22, 101, 52],
+    CL2:   [22, 101, 52],
+    CL3:   [30, 64, 175],
     CL4:   [107, 33, 168],
-    CL5:   [21, 94, 117],
+    CL5:   [31, 41, 55],
     bgsoft:[251, 252, 254],
   };
 
@@ -1975,7 +2234,7 @@ async function exportPDF() {
         id: pr.id,
         text: pr.text,
         rating: getPractice(p.code, pa.id, pr.idx),
-        note: getNote(p.code, pa.id, pr.idx),
+        findings: getFindings(p.code, pa.id, pr.idx),
       }));
 
       ensure(40);
@@ -2005,8 +2264,12 @@ async function exportPDF() {
       // Practice rows
       for (const r of rows) {
         const textLines = wrap(r.text, CONTENT_W - 130, 9);
-        const noteLines = r.note ? wrap(r.note, CONTENT_W - 40, 9) : [];
-        const h = 10 + textLines.length * 11 + (noteLines.length ? 6 + noteLines.length * 11 + 6 : 0);
+        const fBlocks = r.findings.filter(f => f.text.trim()).map(f => ({
+          type: f.type,
+          lines: wrap(f.text, CONTENT_W - 50, 9),
+        }));
+        const fHeight = fBlocks.reduce((s, b) => s + 4 + b.lines.length * 11 + 10, 0);
+        const h = 10 + textLines.length * 11 + fHeight;
         ensure(h + 6);
 
         setDraw(COLORS.line);
@@ -2022,7 +2285,6 @@ async function exportPDF() {
         doc.setFontSize(9);
         doc.text(textLines, M + 60, y + 10);
 
-        // rating pill
         if (r.rating) {
           drawPill(M + CONTENT_W - 28, y + 2, r.rating, COLORS[r.rating], { fontSize: 8 });
         } else {
@@ -2034,22 +2296,23 @@ async function exportPDF() {
 
         let rowY = y + 10 + textLines.length * 11;
 
-        if (noteLines.length) {
+        for (const fb of fBlocks) {
           rowY += 4;
-          setFill([255, 251, 235]);
-          setDraw([253, 230, 138]);
+          const isS = fb.type === 'strength';
+          setFill(isS ? [220, 252, 231] : [254, 226, 226]);
+          setDraw(isS ? [134, 239, 172] : [252, 165, 165]);
           doc.setLineWidth(0.4);
-          const noteH = noteLines.length * 11 + 10;
-          doc.roundedRect(M + 20, rowY, CONTENT_W - 30, noteH, 4, 4, "FD");
-          setText([133, 77, 14]);
+          const fH = fb.lines.length * 11 + 10;
+          doc.roundedRect(M + 20, rowY, CONTENT_W - 30, fH, 4, 4, "FD");
+          setText(isS ? [22, 101, 52] : [153, 27, 27]);
           doc.setFont("helvetica", "bold");
           doc.setFontSize(8);
-          doc.text("NOTE", M + 26, rowY + 10);
+          doc.text(isS ? "STRENGTH" : "WEAKNESS", M + 26, rowY + 10);
           setText(COLORS.ink);
           doc.setFont("helvetica", "normal");
           doc.setFontSize(9);
-          doc.text(noteLines, M + 56, rowY + 10);
-          rowY += noteH;
+          doc.text(fb.lines, M + 66, rowY + 10);
+          rowY += fH;
         }
 
         y = rowY + 6;
@@ -2109,6 +2372,32 @@ document.getElementById("collapsePanel").addEventListener("click", () => {
   mainEl.classList.toggle("sidebar-collapsed");
 });
 
+document.getElementById("toggleAllProcs").addEventListener("click", () => {
+  const allCodes = PROCESSES.flatMap(g => g.items.map(([c]) => c));
+  const allDisabled = allCodes.every(c => isProcessDisabled(c));
+  state.disabledProcs = allDisabled ? [] : [...allCodes];
+  saveState(); renderAll();
+});
+
+function syncCLBar() {
+  document.getElementById("clBar").querySelectorAll("button").forEach(b => {
+    b.classList.toggle("on", visibleCLs.has(parseInt(b.dataset.cl, 10)));
+  });
+}
+document.getElementById("clBar").querySelectorAll("button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const cl = parseInt(btn.dataset.cl, 10);
+    if (visibleCLs.has(cl)) {
+      for (let i = cl; i <= 5; i++) visibleCLs.delete(i);
+    } else {
+      for (let i = 1; i <= cl; i++) visibleCLs.add(i);
+    }
+    syncCLBar();
+    saveState();
+    renderAll();
+  });
+});
+
 function setView(view) {
   currentView = view;
   showingSummary = view === "summary";
@@ -2135,6 +2424,7 @@ if (window.electronAPI) {
 (async () => {
   setStatus("saving", "loading…");
   await bootState();
+  syncCLBar();
   renderAll();
 })();
 </script>
