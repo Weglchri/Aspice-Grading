@@ -1,0 +1,51 @@
+{
+  "name": "apit",
+  "version": "1.0.0",
+  "description": "Automotive Process Improvement Tool — ASPICE 3.1 grading",
+  "main": "main.js",
+  "author": "Christopher Wegl",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win"
+  },
+  "dependencies": {
+    "jspdf": "^2.5.1"
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "net.ut11.apit",
+    "productName": "APIT",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "assets/**",
+      "node_modules/jspdf/dist/jspdf.umd.min.js"
+    ],
+    "mac": {
+      "category": "public.app-category.business",
+      "target": [
+        { "target": "dmg", "arch": ["universal"] }
+      ]
+    },
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false
+    }
+  }
+}
